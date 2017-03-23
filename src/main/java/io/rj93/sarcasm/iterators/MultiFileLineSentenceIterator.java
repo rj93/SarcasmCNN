@@ -1,4 +1,4 @@
-package io.rj93.sarcasm;
+package io.rj93.sarcasm.iterators;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -48,8 +48,7 @@ public class MultiFileLineSentenceIterator extends BaseSentenceIterator {
 	}
 
 	public void reset() {
-		// TODO
-		
+		// TODO	
 	}
 	
 	private void getNewFile() {

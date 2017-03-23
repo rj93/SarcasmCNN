@@ -30,6 +30,12 @@
 		    <artifactId>datavec-api</artifactId>
 		    <version>0.8.0</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.opennlp</groupId>
+			<artifactId>opennlp-tools</artifactId>
+			<version>1.7.2</version>
+		</dependency>
 
 	</dependencies>
   

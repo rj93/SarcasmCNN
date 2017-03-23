@@ -23,11 +23,11 @@ public class DataHelper {
 		return dir;
 	}
 	
-	public static List<File> getFilesFromDir(File dir) throws FileNotFoundException{
+	public static List<File> getFilesFromDir(File dir) throws FileNotFoundException {
 		return getFilesFromDir(dir, false);
 	}
 	
-	public static List<File> getFilesFromDir(File dir, boolean recursive) throws FileNotFoundException{
+	public static List<File> getFilesFromDir(File dir, boolean recursive) throws FileNotFoundException {
 		
 		if (!dir.exists() || !dir.isDirectory())
 			throw new FileNotFoundException("Directory '" + dir.getAbsolutePath() + "' either does not exist, or is not a directory");
@@ -42,4 +42,5 @@ public class DataHelper {
 		
 		return files;
 	}
+
 }
