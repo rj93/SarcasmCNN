@@ -11,6 +11,9 @@ public class DataHelper {
 	public final static String REDDIT_DATA_DIR = DATA_DIR + "reddit_data";
 	public final static String SORTED_DATA_DIR = DATA_DIR + "output_data";
 	public final static String PREPROCESSED_DATA_DIR = DATA_DIR + "preprocessed_data";
+	public final static String WORD2VEC_DIR = DATA_DIR + "word2vec/";
+	
+	public final static String GOOGLE_NEWS_WORD2VEC = WORD2VEC_DIR + "google/GoogleNews-vectors-negative300.bin";
 	
 	private static String getDataDir(){
 		String dir = null;
@@ -21,6 +24,14 @@ public class DataHelper {
 		}
 		dir += "Project/data/";
 		return dir;
+	}
+	
+	public static List<File> getFilesFromDir(String dir) throws FileNotFoundException {
+		return getFilesFromDir(dir, false);
+	}
+	
+	public static List<File> getFilesFromDir(String dir, boolean recursive) throws FileNotFoundException {
+		return getFilesFromDir(new File(dir), true);
 	}
 	
 	public static List<File> getFilesFromDir(File dir) throws FileNotFoundException {

@@ -36,6 +36,8 @@
 			<artifactId>opennlp-tools</artifactId>
 			<version>1.7.2</version>
 		</dependency>
+		
+		<!--  OPTIONAL -->
 
 	</dependencies>
   

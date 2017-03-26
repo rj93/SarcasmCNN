@@ -1,5 +1,12 @@
 package io.rj93.sarcasm.cnn;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.List;
+
+import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
+import org.deeplearning4j.models.word2vec.Word2Vec;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -13,6 +20,9 @@ import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
+
+import io.rj93.sarcasm.data.DataHelper;
+import io.rj93.sarcasm.iterators.TextDataSetIterator;
 
 public class TextCNN {
 	
@@ -86,8 +96,10 @@ public class TextCNN {
         return conf;
 	}
 	
-	public void train(){
-		
+	public void train(Word2Vec embedding, List<File> files) throws IOException{
+		System.out.println("Training Model...");
+		model.fit(new TextDataSetIterator(embedding, files, batchSize, 500));
+		System.out.println("Training Complete");
 	}
 	
 	public void test(){
@@ -98,10 +110,11 @@ public class TextCNN {
 		
 	}
 	
-	public static void main(String[] args){
+	public static void main(String[] args) throws IOException {
 		
+		Word2Vec embedding = WordVectorSerializer.readWord2VecModel(DataHelper.WORD2VEC_DIR + "jan-2015-300.emb");
 		TextCNN cnn = new TextCNN(1, 2, 64, 10, 10);
-		
+		cnn.train(embedding, DataHelper.getFilesFromDir(DataHelper.PREPROCESSED_DATA_DIR, true));
 		
 	}
 }

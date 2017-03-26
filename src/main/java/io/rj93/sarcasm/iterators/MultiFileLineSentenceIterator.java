@@ -63,5 +63,9 @@ public class MultiFileLineSentenceIterator extends BaseSentenceIterator {
 			}
 		}
 	}
+	
+	public boolean isPositive(){
+		return !files.get(index).getName().contains("non-sarcy");
+	}
 
 }
