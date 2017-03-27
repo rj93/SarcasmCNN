@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.iterator.CnnSentenceDataSetIterator;
+import org.deeplearning4j.iterator.CnnSentenceDataSetIterator.UnknownWordHandling;
 import org.deeplearning4j.iterator.LabeledSentenceProvider;
 import org.deeplearning4j.iterator.provider.FileLabeledSentenceProvider;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
@@ -25,7 +26,10 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 
+import io.rj93.sarcasm.data.DataHelper;
+
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.*;
 
 /**
@@ -42,7 +46,7 @@ public class CnnSentenceClassificationExample {
     /** Location to save and extract the training/testing data */
     public static final String DATA_PATH = FilenameUtils.concat(System.getProperty("java.io.tmpdir"), "dl4j_w2vSentiment/");
     /** Location (local file system) for the Google News vectors. Set this manually. */
-    public static final String WORD_VECTORS_PATH = "/PATH/TO/YOUR/VECTORS/GoogleNews-vectors-negative300.bin.gz";
+    public static final String WORD_VECTORS_PATH = DataHelper.GOOGLE_NEWS_WORD2VEC;
 
     public static void main(String[] args) throws Exception {
         if(WORD_VECTORS_PATH.startsWith("/PATH/TO/YOUR/VECTORS/")){
@@ -121,7 +125,13 @@ public class CnnSentenceClassificationExample {
 
         System.out.println("Starting training");
         for (int i = 0; i < nEpochs; i++) {
-            net.fit(trainIter);
+        	try {
+        		net.fit(trainIter);
+        	} catch (RuntimeException e){
+        		e.printStackTrace();
+        		System.out.println("cursor: " + trainIter.cursor());
+        		System.exit(-1);
+        	}
             System.out.println("Epoch " + i + " complete. Starting evaluation:");
 
             //Run evaluation. This is on 25k reviews, so can take some time
@@ -147,26 +157,53 @@ public class CnnSentenceClassificationExample {
 
 
     private static DataSetIterator getDataSetIterator(boolean isTraining, WordVectors wordVectors, int minibatchSize,
-                                                      int maxSentenceLength, Random rng ){
-        String path = FilenameUtils.concat(DATA_PATH, (isTraining ? "aclImdb/train/" : "aclImdb/test/"));
-        String positiveBaseDir = FilenameUtils.concat(path, "pos");
-        String negativeBaseDir = FilenameUtils.concat(path, "neg");
+                                                      int maxSentenceLength, Random rng ) throws FileNotFoundException{
+//        String path = FilenameUtils.concat(DATA_PATH, (isTraining ? "aclImdb/train/" : "aclImdb/test/"));
+//        String positiveBaseDir = FilenameUtils.concat(path, "pos");
+//        String negativeBaseDir = FilenameUtils.concat(path, "neg");
+//
+//        File filePositive = new File(positiveBaseDir);
+//        File fileNegative = new File(negativeBaseDir);
+//        
+//        Map<String,List<File>> reviewFilesMap = new HashMap<>();
+//        reviewFilesMap.put("Positive", Arrays.asList(filePositive.listFiles()));
+//        reviewFilesMap.put("Negative", Arrays.asList(fileNegative.listFiles()));
+    	
+//    	List<File> positiveFiles = new ArrayList<File>();
+//		List<File> negativeFiles = new ArrayList<File>();
+//		for (File f : DataHelper.getFilesFromDir(DataHelper.PREPROCESSED_DATA_DIR)){
+//			if (f.getName().contains("non-sarcy")){
+//				negativeFiles.add(f);
+//			} else {
+//				positiveFiles.add(f);
+//			}
+//		}
+//        Random r = new Random(100);
+//		Map<String,List<File>> reviewFilesMap = new HashMap<>();
+//		reviewFilesMap.put("Positive", positiveFiles);
+//		reviewFilesMap.put("Negative", negativeFiles);
+    	
+        if (wordVectors.getUNK() == null){
+        	System.out.println("getUNK() is null");
+        	wordVectors.setUNK("UNK");
+        }
+    	
+    	File filePositive = new File(DataHelper.TRAIN_DATA_DIR + "pos/");
+    	File fileNegative = new File(DataHelper.TRAIN_DATA_DIR + "neg/");
+    	Map<String,List<File>> reviewFilesMap = new HashMap<>();
+    	reviewFilesMap.put("Positive", Arrays.asList(filePositive.listFiles()));
+    	reviewFilesMap.put("Negative", Arrays.asList(fileNegative.listFiles()));
 
-        File filePositive = new File(positiveBaseDir);
-        File fileNegative = new File(negativeBaseDir);
-
-        Map<String,List<File>> reviewFilesMap = new HashMap<>();
-        reviewFilesMap.put("Positive", Arrays.asList(filePositive.listFiles()));
-        reviewFilesMap.put("Negative", Arrays.asList(fileNegative.listFiles()));
-
+        
         LabeledSentenceProvider sentenceProvider = new FileLabeledSentenceProvider(reviewFilesMap, rng);
-
+        
         return new CnnSentenceDataSetIterator.Builder()
             .sentenceProvider(sentenceProvider)
             .wordVectors(wordVectors)
             .minibatchSize(minibatchSize)
             .maxSentenceLength(maxSentenceLength)
             .useNormalizedWordVectors(false)
+            .unknownWordHandling(UnknownWordHandling.UseUnknownVector)
             .build();
     }
 }
