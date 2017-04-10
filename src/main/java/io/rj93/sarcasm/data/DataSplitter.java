@@ -27,8 +27,8 @@ public class DataSplitter {
 	}
 	
 	public DataSplitter(float train, float validation, float test, int seed){
-		if (train + validation + test > 1)
-			throw new IllegalArgumentException("The sum of train, validation, and float cannot be greater than 1");
+		if (train + validation + test != 1)
+			throw new IllegalArgumentException("The sum of train, validation, and test must equal 1");
 		
 		this.train = train;
 		this.validation = validation;
