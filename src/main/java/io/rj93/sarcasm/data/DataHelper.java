@@ -13,9 +13,9 @@ import java.util.List;
 public class DataHelper {
 	
 	public final static String DATA_DIR = getDataDir();
-	public final static String REDDIT_DATA_DIR = DATA_DIR + "reddit_data";
-	public final static String SORTED_DATA_DIR = DATA_DIR + "output_data";
-	public final static String PREPROCESSED_DATA_DIR = DATA_DIR + "preprocessed_data";
+	public final static String REDDIT_DATA_DIR = DATA_DIR + "reddit_data/";
+	public final static String SORTED_DATA_DIR = DATA_DIR + "output_data/";
+	public final static String PREPROCESSED_DATA_DIR = DATA_DIR + "preprocessed_data/";
 	public final static String TRAIN_DATA_DIR = DATA_DIR + "train/";
 	public final static String EVAL_DATA_DIR = PREPROCESSED_DATA_DIR + "eval/";
 	public final static String TEST_DATA_DIR = PREPROCESSED_DATA_DIR + "test/";
@@ -67,9 +67,10 @@ public class DataHelper {
 		List<String> s = Files.readAllLines(Paths.get(inFile.getAbsolutePath()));
 		int count = 0;
 		for (int i = 0; i < s.size(); i++){
-			if (s.get(i).length() > 3){
+			String line = s.get(i);
+			if (line.length() > 3){
 				PrintWriter writer = new PrintWriter(outDir.getAbsolutePath() + "/" + i + ".json", "UTF-8");
-				writer.println(s.get(i));
+				writer.println(line);
 				writer.close();
 			} else {
 				count++;

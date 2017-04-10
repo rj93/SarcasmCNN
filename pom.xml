@@ -6,7 +6,13 @@
   	<name>SarcasmCNN</name>
   
   	<dependencies>
-  	
+  		
+  		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-compress</artifactId>
+		    <version>1.13</version>
+		</dependency>
+  		 
 		<dependency>
 		    <groupId>org.deeplearning4j</groupId>
 		    <artifactId>deeplearning4j-core</artifactId>
@@ -19,11 +25,13 @@
 		    <version>0.8.0</version>
 		</dependency>
 		
+		<!--  
 		<dependency>
 		    <groupId>org.nd4j</groupId>
 		    <artifactId>nd4j-native-platform</artifactId>
 		    <version>0.8.0</version>
 		</dependency>
+		-->
 		
 		<dependency>
 		    <groupId>org.datavec</groupId>
@@ -31,13 +39,51 @@
 		    <version>0.8.0</version>
 		</dependency>
 		
+
+		
+		<dependency>
+		   <groupId>org.nd4j</groupId>
+		   <artifactId>nd4j-cuda-8.0</artifactId>
+		   <version>0.8.0</version>
+		</dependency>
+		
+		<!-- 
+		<dependency>
+		    <groupId>org.deeplearning4j</groupId>
+		    <artifactId>deeplearning4j-cuda-8.0</artifactId>
+		    <version>0.8.0</version>
+		</dependency>
+ 		-->
+ 		
+		<!-- NLP -->
 		<dependency>
 			<groupId>org.apache.opennlp</groupId>
 			<artifactId>opennlp-tools</artifactId>
 			<version>1.7.2</version>
 		</dependency>
 		
-		<!--  OPTIONAL -->
+		<dependency>
+		    <groupId>org.apache.lucene</groupId>
+		    <artifactId>lucene-core</artifactId>
+		    <version>6.5.0</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>org.apache.lucene</groupId>
+		    <artifactId>lucene-analyzers-common</artifactId>
+		    <version>6.5.0</version>
+		</dependency>
+		
+		<!--
+  		<dependency>
+		    <groupId>edu.stanford.nlp</groupId>
+		    <artifactId>stanford-corenlp</artifactId>
+		    <version>3.7.0</version>
+		</dependency>
+  		-->
+		
+		
+		<!--  LOGGING -->
 		<dependency>
 		    <groupId>org.slf4j</groupId>
 		    <artifactId>slf4j-api</artifactId>
@@ -46,12 +92,18 @@
 		
 		<dependency>
 		    <groupId>org.slf4j</groupId>
-		    <artifactId>slf4j-log4j12</artifactId>
+		    <artifactId>slf4j-simple</artifactId>
 		    <version>1.7.25</version>
 		</dependency>
+
 		
 		
 
 	</dependencies>
+	
+	<properties>
+        <nd4j.version>0.8.0</nd4j.version>
+        <dl4j.version>0.8.0</dl4j.version>
+    </properties>
   
 </project>

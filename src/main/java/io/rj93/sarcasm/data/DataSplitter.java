@@ -26,13 +26,14 @@ public class DataSplitter {
 		rand = new Random(seed);
 	}
 	
-	public DataSplitter(float train, float validation, float test){
+	public DataSplitter(float train, float validation, float test, int seed){
 		if (train + validation + test > 1)
 			throw new IllegalArgumentException("The sum of train, validation, and float cannot be greater than 1");
 		
 		this.train = train;
 		this.validation = validation;
 		this.test = test;
+		this.seed = seed;
 		rand = new Random(seed);
 	}
 	
