@@ -1,22 +1,32 @@
 package io.rj93.sarcasm.preprocessing;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.apache.lucene.analysis.CharArraySet;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.en.EnglishAnalyzer;
-import org.apache.lucene.analysis.standard.StandardTokenizer;
-import org.apache.lucene.util.AttributeFactory;
-import org.apache.lucene.util.AttributeImpl;
+import org.apache.commons.io.FileUtils;
 import org.deeplearning4j.text.sentenceiterator.SentencePreProcessor;
 
 import opennlp.tools.stemmer.PorterStemmer;
 
+@SuppressWarnings("serial")
 public class TextPreProcessor implements SentencePreProcessor {
 	
 	final private static PorterStemmer stemmer = new PorterStemmer();
-	final private static CharArraySet stopWords = EnglishAnalyzer.getDefaultStopSet();
+	private static Set<String> stopWords = getStopWords();
+	
+	private boolean removeStopWords;
+	private boolean stem;
+	
+	public TextPreProcessor(){
+		this(true, true);
+	}
+	
+	public TextPreProcessor(boolean removeStopWords, boolean stem) {
+		this.removeStopWords = removeStopWords;
+		this.stem = stem;
+	}
 	
 	@Override
 	public String preProcess(String sentence) {
@@ -32,22 +42,26 @@ public class TextPreProcessor implements SentencePreProcessor {
 		
 		StringBuilder sb = new StringBuilder();
 		for (String word : sentence.split("\\s")){
+			if (removeStopWords && stopWords.contains(word))
+				continue;
 			
+			if (stem)
+				sb.append(stemmer.stem(word));
+			else 
+				sb.append(word);
 		}
 		
-		TokenStream tokenStream = new StandardTokenizer(AttributeFactory.DEFAULT_ATTRIBUTE_FACTORY);
+		return sb.toString();
+	}
+	
+	private static Set<String> getStopWords() {
+		Set<String> stopWords = null;
 		try {
-			tokenStream.reset();
-//			System.out.println(tokenStream.);
+			stopWords = new HashSet<String>(FileUtils.readLines(new File("data/stopWords.txt")));
 		} catch (IOException e) {
 			e.printStackTrace();
-		} finally {
-			try { tokenStream.end(); } catch (Exception e) { /* ignored */ }
-			try { tokenStream.close(); } catch (Exception e) { /* ignored */ }
 		}
-		
-		
-		return sentence;
+		return stopWords;
 	}
 	
 	public static void main(String[] args){

@@ -100,7 +100,7 @@ public class FilterFromRedditRaw {
 		    		sarcasticSizes.add(body.length());
 		    		positiveWriter.println(line);
 		    		posCount++;
-		    	} else if (sarcasticSizes.size() > 0){ // search for similar non-sarcastic comments
+		    	} else if (sarcasticSizes.size() > 0){ // search for similar sized non-sarcastic comments
 		    		for (int i = 0; i < sarcasticSizes.size(); i++){
 		    			int size = sarcasticSizes.get(i);
 		    			if (Math.abs(body.length() - size) <= (0.1 * size)){ // compare sizes to be within 10% of each other

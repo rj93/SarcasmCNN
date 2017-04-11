@@ -1,10 +1,20 @@
 package io.rj93.sarcasm.data;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.deeplearning4j.text.sentenceiterator.FileSentenceIterator;
 import org.deeplearning4j.text.sentenceiterator.SentenceIterator;
+
+import io.rj93.sarcasm.iterators.MultiFileLineSentenceIterator;
+import io.rj93.sarcasm.preprocessing.JSONPreProcessor;
 
 public class DataSplitter {
 	
@@ -70,6 +80,78 @@ public class DataSplitter {
 		} else if (f < (train + validation + test)){
 			testSet.add(s);
 		} 
+	}
+	
+	private static boolean writeToFile(String filePath, List<String> data){
+		boolean success = false;
+		
+		File f = new File(filePath);
+		f.getParentFile().mkdirs();
+		
+		PrintWriter writer = null;
+		try {
+			writer = new PrintWriter(f);
+			for (String s : data){
+				writer.println(s);
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} finally {
+			try { writer.close(); } catch (Exception e) { /* ignored */ }
+		}
+		
+		return success;
+	}
+	
+	public void writeToFile(String path){
+		
+	}
+	
+	public static void main(String[] args){
+		File inputDir = new File(DataHelper.SORTED_DATA_DIR);
+		
+		File[] years = inputDir.listFiles((FileFilter) FileFilterUtils.directoryFileFilter()); // only list directories
+		for (File year : years){
+			for (String Class : new String[]{"pos", "neg"}){
+				try {
+
+					List<File> files = DataHelper.getFilesFromDir(year.getAbsolutePath() + "/" + Class);
+					for (File f : files){
+						
+						List<String> processedStrings = new ArrayList<String>();
+						FileSentenceIterator iter = new FileSentenceIterator(f);
+						iter.setPreProcessor(new JSONPreProcessor());
+						while (iter.hasNext()){
+							processedStrings.add(iter.nextSentence());
+						}
+						
+						DataSplitter splitter = new DataSplitter(0.8f, 0f, 0.2f, 123);
+						splitter.split(processedStrings);
+						
+						List<String> train = splitter.getTrainSet();
+						List<String> val = splitter.getValidationSet();
+						List<String> test = splitter.getTestSet();
+						
+						float totalSize = train.size() + val.size() + test.size();
+
+						float trainPer = train.size() / totalSize;
+						float valPer = val.size() / totalSize;
+						float testPer = test.size() / totalSize;
+						
+						System.out.println(String.format("train = %f, val = %f, test = %f, dir = %s", trainPer, valPer, testPer, year.getName()+"/"+Class));
+						
+						String outDir = DataHelper.PREPROCESSED_DATA_DIR + year.getName() + "/";
+						writeToFile(outDir + "train/" + Class + "/" + f.getName(), train);
+						writeToFile(outDir + "test/" + Class + "/" + f.getName(), test);
+					}
+					
+					
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
+			}
+		}
 	}
 	
 }
