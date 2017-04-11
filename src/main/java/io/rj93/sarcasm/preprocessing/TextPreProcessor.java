@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.deeplearning4j.text.sentenceiterator.SentencePreProcessor;
@@ -13,8 +15,11 @@ import opennlp.tools.stemmer.PorterStemmer;
 @SuppressWarnings("serial")
 public class TextPreProcessor implements SentencePreProcessor {
 	
-	final private static PorterStemmer stemmer = new PorterStemmer();
-	private static Set<String> stopWords = getStopWords();
+
+	private final static Set<String> stopWords = getStopWords();
+	
+	private final PorterStemmer stemmer = new PorterStemmer();
+	private final Pattern pattern = Pattern.compile("(\\p{Punct}+)");
 	
 	private boolean removeStopWords;
 	private boolean stem;
@@ -35,9 +40,17 @@ public class TextPreProcessor implements SentencePreProcessor {
 		sentence = sentence.replace(" /s", "");
 		sentence = sentence.replaceAll("'", "");
 		
-		sentence = sentence.replaceAll("/?u/[\\w-]+", "<USER>"); // usernames 
-		sentence = sentence.replaceAll("\\b(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]", "<URL>");
-		sentence = sentence.replaceAll("\\p{Punct}+", " "); // punctuation 
+
+		sentence = sentence.replaceAll("/?u/[\\w-]+", "USER"); // usernames 
+		sentence = sentence.replaceAll("\\b(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]", "URL"); // URLS
+		
+		Matcher matcher = pattern.matcher(sentence);
+		while (matcher.find()) {
+			String puncutation = matcher.group(1);
+			sentence = sentence.replace(puncutation, " " + puncutation + " ");
+		}
+		
+//		sentence = sentence.replaceAll("\\p{Punct}+", " "); // punctuation 
 		sentence = sentence.trim().replaceAll("\\s{2,}", " "); // excess spaces
 		
 		StringBuilder sb = new StringBuilder();
@@ -49,6 +62,8 @@ public class TextPreProcessor implements SentencePreProcessor {
 				sb.append(stemmer.stem(word));
 			else 
 				sb.append(word);
+			
+			sb.append(" ");
 		}
 		
 		return sb.toString();
@@ -57,7 +72,7 @@ public class TextPreProcessor implements SentencePreProcessor {
 	private static Set<String> getStopWords() {
 		Set<String> stopWords = null;
 		try {
-			stopWords = new HashSet<String>(FileUtils.readLines(new File("data/stopWords.txt")));
+			stopWords = new HashSet<String>(FileUtils.readLines(new File("data/stop-words.txt")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -76,6 +91,7 @@ public class TextPreProcessor implements SentencePreProcessor {
 		System.out.println(tpp.preProcess("u/hello-world-123_456 says hello"));
 		System.out.println(tpp.preProcess("the grey fox jumps over the river"));
 		System.out.println(tpp.preProcess("the grey fox jumps over...the river"));
+		System.out.println(tpp.preProcess("the grey fox jumps over...the,,, river"));
 	}
 
 }

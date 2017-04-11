@@ -62,27 +62,6 @@
 			<version>1.7.2</version>
 		</dependency>
 		
-		<dependency>
-		    <groupId>org.apache.lucene</groupId>
-		    <artifactId>lucene-core</artifactId>
-		    <version>6.5.0</version>
-		</dependency>
-		
-		<dependency>
-		    <groupId>org.apache.lucene</groupId>
-		    <artifactId>lucene-analyzers-common</artifactId>
-		    <version>6.5.0</version>
-		</dependency>
-		
-		<!--
-  		<dependency>
-		    <groupId>edu.stanford.nlp</groupId>
-		    <artifactId>stanford-corenlp</artifactId>
-		    <version>3.7.0</version>
-		</dependency>
-  		-->
-		
-		
 		<!--  LOGGING -->
 		<dependency>
 		    <groupId>org.slf4j</groupId>
