@@ -146,11 +146,13 @@ public class FilterFromRedditRaw implements Runnable {
 	public void run() {
 		System.out.println(String.format("Thread %d - Decompressing: %s", id, inFilePath));
 		String decompressedFilePath = inFilePath.replace("bz2", "json");
-//		
+
 		if (decompressFile(inFilePath, decompressedFilePath)){
 			System.out.println(String.format("Thread %d - Completed decompressing: %s", id, inFilePath));
+			
 			filter(decompressedFilePath, outDir);
 			System.out.println(String.format("Thread %d - Completed filtering: %s", id, decompressedFilePath));
+			
 			deleteFile(decompressedFilePath);
 		}
 	}
@@ -158,16 +160,15 @@ public class FilterFromRedditRaw implements Runnable {
 	public static void main(String[] args) {
 		File redditDataDir = new File(DataHelper.REDDIT_DATA_DIR);
 		
-		List<File> compressedFiles;
 		try {
-			compressedFiles = DataHelper.getFilesFromDir(redditDataDir, true, new FilenameFilter() {
+			List<File> compressedFiles = DataHelper.getFilesFromDir(redditDataDir, true, new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
 					return name.endsWith(".bz2");
 				}
 			});
 			
-			ExecutorService executor = Executors.newFixedThreadPool(4);
+			ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 			int id = 0;
 			for (File f : compressedFiles){
 				String outputDir = DataHelper.SORTED_DATA_DIR + f.getParentFile().getName() + "/";
