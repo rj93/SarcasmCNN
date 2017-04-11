@@ -13,6 +13,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -26,9 +33,19 @@ import com.twelvemonkeys.io.FileUtil;
 import io.rj93.sarcasm.data.DataHelper;
 import io.rj93.sarcasm.examples.DataUtilities;
 
-public class FilterFromRedditRaw {
+public class FilterFromRedditRaw implements Runnable {
 	
 	final private static Logger logger = LoggerFactory.getLogger(FilterFromRedditRaw.class);
+	
+	private int id;
+	private String inFilePath;
+	private String outDir;
+	
+	public FilterFromRedditRaw(int id, String inFile, String outDir){
+		this.id = id;
+		this.inFilePath = inFile;
+		this.outDir = outDir;
+	}
 	
 	private static boolean decompressFile(String inPath, String outPath){
 		boolean success = false;
@@ -125,31 +142,44 @@ public class FilterFromRedditRaw {
 		
 	}
 	
+	@Override
+	public void run() {
+		System.out.println(String.format("Thread %d - Decompressing: %s", id, inFilePath));
+		String decompressedFilePath = inFilePath.replace("bz2", "json");
+//		
+		if (decompressFile(inFilePath, decompressedFilePath)){
+			System.out.println(String.format("Thread %d - Completed decompressing: %s", id, inFilePath));
+			filter(decompressedFilePath, outDir);
+			System.out.println(String.format("Thread %d - Completed filtering: %s", id, decompressedFilePath));
+			deleteFile(decompressedFilePath);
+		}
+	}
+	
 	public static void main(String[] args) {
 		File redditDataDir = new File(DataHelper.REDDIT_DATA_DIR);
 		
-		File[] years = redditDataDir.listFiles((FileFilter) FileFilterUtils.directoryFileFilter()); // only list directories
-		for (File year : years){
-
-			// list compressed files
-			File[] compressedFiles = year.listFiles(new FilenameFilter() {
+		List<File> compressedFiles;
+		try {
+			compressedFiles = DataHelper.getFilesFromDir(redditDataDir, true, new FilenameFilter() {
 				@Override
 				public boolean accept(File dir, String name) {
 					return name.endsWith(".bz2");
 				}
 			});
 			
+			ExecutorService executor = Executors.newFixedThreadPool(4);
+			int id = 0;
 			for (File f : compressedFiles){
-				String compressedfilePath = f.getAbsolutePath();
-				String decompressedFilePath = compressedfilePath.replace("bz2", "json");
-				
-				if (decompressFile(compressedfilePath, decompressedFilePath)){
-					filter(decompressedFilePath, DataHelper.SORTED_DATA_DIR + year.getName() + "/");
-					
-					deleteFile(decompressedFilePath);
-				}
+				String outputDir = DataHelper.SORTED_DATA_DIR + f.getParentFile().getName() + "/";
+				executor.execute(new FilterFromRedditRaw(id++, f.getAbsolutePath(), outputDir));
 			}
-		}
+			executor.shutdown();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} 
+		
+		
+
 	}
 
 }

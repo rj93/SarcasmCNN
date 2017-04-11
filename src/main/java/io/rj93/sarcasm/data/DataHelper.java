@@ -1,14 +1,21 @@
 package io.rj93.sarcasm.data;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+
+import org.apache.commons.io.filefilter.FileFileFilter;
+import org.apache.commons.io.filefilter.FileFilterUtils;
 
 public class DataHelper {
 	
@@ -48,18 +55,30 @@ public class DataHelper {
 	
 	public static List<File> getFilesFromDir(File dir, boolean recursive) throws FileNotFoundException {
 		
+		return getFilesFromDir(dir, recursive, null);
+	}
+	
+	
+	public static List<File> getFilesFromDir(File dir, boolean recursive, FilenameFilter filter) throws FileNotFoundException {
+		
 		if (!dir.exists() || !dir.isDirectory())
 			throw new FileNotFoundException("Directory '" + dir.getAbsolutePath() + "' either does not exist, or is not a directory");
 		
 		List<File> files = new ArrayList<File>();
 		for (File f : dir.listFiles()) {
-			if (f.isFile())
+			if (f.isFile() && acceptFilter(f, filter))
 				files.add(f);
-			else if (recursive)
-				files.addAll(getFilesFromDir(f, true));
+			else if (recursive && !f.isFile())
+				files.addAll(getFilesFromDir(f, true, filter));
 		}
 		
 		return files;
+	}
+	
+	private static boolean acceptFilter(File f, FilenameFilter filter){
+		if (filter != null)
+			return filter.accept(f.getParentFile(), f.getName());
+		return true;
 	}
 	
 	public static void seperateToMultipleFiles(File inFile, File outDir) throws IOException{
