@@ -13,7 +13,6 @@ import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.deeplearning4j.text.sentenceiterator.FileSentenceIterator;
 import org.deeplearning4j.text.sentenceiterator.SentenceIterator;
 
-import io.rj93.sarcasm.iterators.MultiFileLineSentenceIterator;
 import io.rj93.sarcasm.preprocessing.JSONPreProcessor;
 
 public class DataSplitter {

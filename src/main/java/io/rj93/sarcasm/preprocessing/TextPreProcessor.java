@@ -74,7 +74,7 @@ public class TextPreProcessor implements SentencePreProcessor {
 	private static Set<String> getStopWords() {
 		Set<String> stopWords = null;
 		try {
-			stopWords = new HashSet<String>(FileUtils.readLines(new File("data/stop-words.txt")));
+			stopWords = new HashSet<String>(FileUtils.readLines(new File("resources/stop-words.txt")));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
