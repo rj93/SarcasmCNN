@@ -19,7 +19,7 @@ public class TextPreProcessor implements SentencePreProcessor {
 	private final static Set<String> stopWords = getStopWords();
 	
 	private final PorterStemmer stemmer = new PorterStemmer();
-	private final Pattern pattern = Pattern.compile("(\\p{Punct}+)");
+	private final Pattern punctuationPattern = Pattern.compile("(\\p{Punct}+)");
 	
 	private boolean removeStopWords;
 	private boolean stem;
@@ -43,8 +43,10 @@ public class TextPreProcessor implements SentencePreProcessor {
 
 		sentence = sentence.replaceAll("/?u/[\\w-]+", "USER"); // usernames 
 		sentence = sentence.replaceAll("\\b(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]", "URL"); // URLS
+		sentence = sentence.replaceAll("[\\[\\](){}]+", ""); // brackets
 		
-		Matcher matcher = pattern.matcher(sentence);
+		// Separate any punctuation into "words" 
+		Matcher matcher = punctuationPattern.matcher(sentence);
 		while (matcher.find()) {
 			String puncutation = matcher.group(1);
 			sentence = sentence.replace(puncutation, " " + puncutation + " ");
@@ -92,6 +94,7 @@ public class TextPreProcessor implements SentencePreProcessor {
 		System.out.println(tpp.preProcess("the grey fox jumps over the river"));
 		System.out.println(tpp.preProcess("the grey fox jumps over...the river"));
 		System.out.println(tpp.preProcess("the grey fox jumps over...the,,, river"));
+		System.out.println(tpp.preProcess("the grey fox {jumps [over]}...the,,, (river)"));
 	}
 
 }

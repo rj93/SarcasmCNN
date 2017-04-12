@@ -3,7 +3,6 @@ package io.rj93.sarcasm.preprocessing;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -13,25 +12,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-import org.apache.commons.io.filefilter.FileFilterUtils;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.twelvemonkeys.io.FileUtil;
-
 import io.rj93.sarcasm.data.DataHelper;
-import io.rj93.sarcasm.examples.DataUtilities;
 
 public class FilterFromRedditRaw implements Runnable {
 	
@@ -155,6 +144,7 @@ public class FilterFromRedditRaw implements Runnable {
 			
 			deleteFile(decompressedFilePath);
 		}
+		System.out.println(String.format("Thread %d - Finished", id));
 	}
 	
 	public static void main(String[] args) {

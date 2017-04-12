@@ -103,10 +103,6 @@ public class DataSplitter {
 		return success;
 	}
 	
-	public void writeToFile(String path){
-		
-	}
-	
 	public static void main(String[] args){
 		File inputDir = new File(DataHelper.SORTED_DATA_DIR);
 		
@@ -122,7 +118,9 @@ public class DataSplitter {
 						FileSentenceIterator iter = new FileSentenceIterator(f);
 						iter.setPreProcessor(new JSONPreProcessor());
 						while (iter.hasNext()){
-							processedStrings.add(iter.nextSentence());
+							String s = iter.nextSentence();
+//							System.out.println(s);
+							processedStrings.add(s);
 						}
 						
 						DataSplitter splitter = new DataSplitter(0.8f, 0f, 0.2f, 123);
