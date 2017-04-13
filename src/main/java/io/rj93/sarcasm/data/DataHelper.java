@@ -41,24 +41,6 @@ public class DataHelper {
 		return dir;
 	}
 	
-	public static List<File> getFilesFromDir(String dir) throws FileNotFoundException {
-		return getFilesFromDir(dir, false);
-	}
-	
-	public static List<File> getFilesFromDir(String dir, boolean recursive) throws FileNotFoundException {
-		return getFilesFromDir(new File(dir), true);
-	}
-	
-	public static List<File> getFilesFromDir(File dir) throws FileNotFoundException {
-		return getFilesFromDir(dir, false);
-	}
-	
-	public static List<File> getFilesFromDir(File dir, boolean recursive) throws FileNotFoundException {
-		
-		return getFilesFromDir(dir, recursive, null);
-	}
-	
-	
 	public static List<File> getFilesFromDir(File dir, boolean recursive, FilenameFilter filter) throws FileNotFoundException {
 		
 		if (!dir.exists() || !dir.isDirectory())
@@ -75,9 +57,30 @@ public class DataHelper {
 		return files;
 	}
 	
+	public static List<File> getFilesFromDir(File dir, FileFilter filter, boolean recursive) throws FileNotFoundException {
+		if (!dir.exists() || !dir.isDirectory())
+			throw new FileNotFoundException("Directory '" + dir.getAbsolutePath() + "' either does not exist, or is not a directory");
+		
+		List<File> files = new ArrayList<File>();
+		for (File f : dir.listFiles()) {
+			if (f.isFile() && acceptFilter(f, filter))
+				files.add(f);
+			else if (recursive && !f.isFile())
+				files.addAll(getFilesFromDir(f, filter, true));
+		}
+		
+		return files;
+	}
+	
 	private static boolean acceptFilter(File f, FilenameFilter filter){
 		if (filter != null)
 			return filter.accept(f.getParentFile(), f.getName());
+		return true;
+	}
+	
+	private static boolean acceptFilter(File f, FileFilter filter){
+		if (filter != null)
+			return filter.accept(f);
 		return true;
 	}
 	

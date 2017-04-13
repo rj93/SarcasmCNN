@@ -23,7 +23,7 @@ public class Main {
 		String fileNonSarcyPath = DataHelper.DATA_DIR + "preprocessed_data/2015/RC_2015-01-non-sarcy.json";
 		String fileSarcyPath = DataHelper.DATA_DIR + "preprocessed_data/2015/RC_2015-01-sarcy.json";
 		List<File> files = Arrays.asList(new File(fileNonSarcyPath), new File(fileSarcyPath));
-		files = DataHelper.getFilesFromDir(DataHelper.PREPROCESSED_DATA_DIR, true);
+//		files = DataHelper.getFilesFromDir(DataHelper.PREPROCESSED_DATA_DIR, true);
 //        trainWord2Vec(files, false);
         
 //        Word2Vec vec = WordVectorSerializer.readWord2VecModel(DataHelper.GOOGLE_NEWS_WORD2VEC);

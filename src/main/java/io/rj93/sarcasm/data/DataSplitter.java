@@ -5,6 +5,7 @@ import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -12,6 +13,7 @@ import java.util.Random;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.deeplearning4j.text.sentenceiterator.FileSentenceIterator;
 import org.deeplearning4j.text.sentenceiterator.SentenceIterator;
+import org.iq80.leveldb.util.FileUtils;
 
 import io.rj93.sarcasm.preprocessing.JSONPreProcessor;
 
@@ -81,7 +83,7 @@ public class DataSplitter {
 		} 
 	}
 	
-	private static boolean writeToFile(String filePath, List<String> data){
+	private static boolean writeToFile(String filePath, List<String> data, int minSize){
 		boolean success = false;
 		
 		File f = new File(filePath);
@@ -91,7 +93,9 @@ public class DataSplitter {
 		try {
 			writer = new PrintWriter(f);
 			for (String s : data){
-				writer.println(s);
+				if (s != null && s.length() >= minSize){
+					writer.println(s);
+				}
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -108,43 +112,36 @@ public class DataSplitter {
 		File[] years = inputDir.listFiles((FileFilter) FileFilterUtils.directoryFileFilter()); // only list directories
 		for (File year : years){
 			for (String Class : new String[]{"pos", "neg"}){
-				try {
 
-					List<File> files = DataHelper.getFilesFromDir(year.getAbsolutePath() + "/" + Class);
-					for (File f : files){
-						
-						List<String> processedStrings = new ArrayList<String>();
-						FileSentenceIterator iter = new FileSentenceIterator(f);
-						iter.setPreProcessor(new JSONPreProcessor());
-						while (iter.hasNext()){
-							String s = iter.nextSentence();
+				List<File> files = FileUtils.listFiles(new File(year.getAbsolutePath() + "/" + Class));
+				for (File f : files){
+					List<String> processedStrings = new ArrayList<String>();
+					FileSentenceIterator iter = new FileSentenceIterator(f);
+					iter.setPreProcessor(new JSONPreProcessor());
+					while (iter.hasNext()){
+						String s = iter.nextSentence();
 //							System.out.println(s);
-							processedStrings.add(s);
-						}
-						
-						DataSplitter splitter = new DataSplitter(0.8f, 0f, 0.2f, 123);
-						splitter.split(processedStrings);
-						
-						List<String> train = splitter.getTrainSet();
-						List<String> val = splitter.getValidationSet();
-						List<String> test = splitter.getTestSet();
-						
-						float totalSize = train.size() + val.size() + test.size();
-
-						float trainPer = train.size() / totalSize;
-						float valPer = val.size() / totalSize;
-						float testPer = test.size() / totalSize;
-						
-						System.out.println(String.format("train = %f, val = %f, test = %f, dir = %s", trainPer, valPer, testPer, year.getName()+"/"+Class));
-						
-						String outDir = DataHelper.PREPROCESSED_DATA_DIR + year.getName() + "/";
-						writeToFile(outDir + "train/" + Class + "/" + f.getName(), train);
-						writeToFile(outDir + "test/" + Class + "/" + f.getName(), test);
+						processedStrings.add(s);
 					}
 					
+					DataSplitter splitter = new DataSplitter(0.8f, 0f, 0.2f, 123);
+					splitter.split(processedStrings);
 					
-				} catch (IOException e) {
-					e.printStackTrace();
+					List<String> train = splitter.getTrainSet();
+					List<String> val = splitter.getValidationSet();
+					List<String> test = splitter.getTestSet();
+					
+					float totalSize = train.size() + val.size() + test.size();
+
+					float trainPer = train.size() / totalSize;
+					float valPer = val.size() / totalSize;
+					float testPer = test.size() / totalSize;
+					
+					String outDir = DataHelper.PREPROCESSED_DATA_DIR + year.getName() + "/";
+					System.out.println(String.format("train = %f, val = %f, test = %f, dir = %s", trainPer, valPer, testPer, year.getName() + "/" +Class));
+					writeToFile(outDir + "train/" + Class + "/" + f.getName(), train, 2);
+					writeToFile(outDir + "test/" + Class + "/" + f.getName(), test, 2);
+					
 				}
 				
 			}

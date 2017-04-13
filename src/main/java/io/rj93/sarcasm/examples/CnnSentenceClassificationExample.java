@@ -2,10 +2,13 @@ package io.rj93.sarcasm.examples;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.iterator.CnnSentenceDataSetIterator;
 import org.deeplearning4j.iterator.CnnSentenceDataSetIterator.UnknownWordHandling;
 import org.deeplearning4j.iterator.LabeledSentenceProvider;
+import org.deeplearning4j.iterator.provider.CollectionLabeledSentenceProvider;
 import org.deeplearning4j.iterator.provider.FileLabeledSentenceProvider;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
@@ -30,6 +33,7 @@ import io.rj93.sarcasm.data.DataHelper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -41,6 +45,8 @@ import java.util.*;
  */
 public class CnnSentenceClassificationExample {
 
+	private static Logger logger = LogManager.getLogger(CnnSentenceClassificationExample.class);
+	
     /** Data URL for downloading */
     public static final String DATA_URL = "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz";
     /** Location to save and extract the training/testing data */
@@ -49,6 +55,7 @@ public class CnnSentenceClassificationExample {
     public static final String WORD_VECTORS_PATH = DataHelper.GOOGLE_NEWS_WORD2VEC;
 
     public static void main(String[] args) throws Exception {
+    	
         if(WORD_VECTORS_PATH.startsWith("/PATH/TO/YOUR/VECTORS/")){
             throw new RuntimeException("Please set the WORD_VECTORS_PATH before running this example");
         }
@@ -59,10 +66,10 @@ public class CnnSentenceClassificationExample {
         //Basic configuration
         int batchSize = 32;
         int vectorSize = 300;               //Size of the word vectors. 300 in the Google News model
-        int nEpochs = 1;                    //Number of epochs (full passes of training data) to train on
+        int nEpochs = 5;                    //Number of epochs (full passes of training data) to train on
         int truncateReviewsToLength = 256;  //Truncate reviews with length (# words) greater than this
 
-        int cnnLayerFeatureMaps = 100;      //Number of feature maps / channels / depth for each CNN layer
+        int cnnLayerFeatureMaps = 10;      //Number of feature maps / channels / depth for each CNN layer
         PoolingType globalPoolingType = PoolingType.MAX;
         Random rng = new Random(12345); //For shuffling repeatability
 
@@ -74,6 +81,8 @@ public class CnnSentenceClassificationExample {
             .activation(Activation.LEAKYRELU)
             .updater(Updater.ADAM)
             .convolutionMode(ConvolutionMode.Same)      //This is important so we can 'stack' the results later
+            .seed(100)
+            .iterations(1)
             .regularization(true).l2(0.0001)
             .learningRate(0.01)
             .graphBuilder()
@@ -118,85 +127,103 @@ public class CnnSentenceClassificationExample {
         }
 
         //Load word vectors and get the DataSetIterators for training and testing
-        System.out.println("Loading word vectors and creating DataSetIterators");
+        System.out.println("Loading word vector");
         WordVectors wordVectors = WordVectorSerializer.loadStaticModel(new File(WORD_VECTORS_PATH));
-        DataSetIterator trainIter = getDataSetIterator(true, wordVectors, batchSize, truncateReviewsToLength, rng);
-        DataSetIterator testIter = getDataSetIterator(false, wordVectors, batchSize, truncateReviewsToLength, rng);
+        if (wordVectors.getUNK() == null){
+        	System.out.println("getUNK() is null");
+        	wordVectors.setUNK("UNK");
+        }
 
         System.out.println("Starting training");
         for (int i = 0; i < nEpochs; i++) {
+        	
+        	DataSetIterator trainIter = getDataSetIterator(true, wordVectors, batchSize, truncateReviewsToLength, rng);
+            DataSetIterator testIter = getDataSetIterator(false, wordVectors, batchSize, truncateReviewsToLength, rng);
+            
+        	long start = System.nanoTime();
+        	long diff;
         	try {
         		net.fit(trainIter);
         	} catch (RuntimeException e){
         		e.printStackTrace();
         		System.out.println("cursor: " + trainIter.cursor());
         		System.exit(-1);
+        	} finally {
+        		diff = System.nanoTime() - start;
         	}
-            System.out.println("Epoch " + i + " complete. Starting evaluation:");
+            System.out.print("Epoch " + i + " complete in " + diff / (1000 * 1000) + "ms. Starting evaluation... ");
 
             //Run evaluation. This is on 25k reviews, so can take some time
+            
+            start = System.nanoTime();
             Evaluation evaluation = net.evaluate(testIter);
-
+            diff = System.nanoTime() - start;
+            System.out.println("complete in: " + diff / (1000 * 1000) + "ms");
+            
             System.out.println(evaluation.stats());
         }
 
 
         //After training: load a single sentence and generate a prediction
-        String pathFirstNegativeFile = FilenameUtils.concat(DATA_PATH, "aclImdb/test/neg/0_2.txt");
-        String contentsFirstNegative = FileUtils.readFileToString(new File(pathFirstNegativeFile));
-        INDArray featuresFirstNegative = ((CnnSentenceDataSetIterator)testIter).loadSingleSentence(contentsFirstNegative);
-
-        INDArray predictionsFirstNegative = net.outputSingle(featuresFirstNegative);
-        List<String> labels = testIter.getLabels();
-
-        System.out.println("\n\nPredictions for first negative review:");
-        for( int i=0; i<labels.size(); i++ ){
-            System.out.println("P(" + labels.get(i) + ") = " + predictionsFirstNegative.getDouble(i));
-        }
-    }
-
-
-    private static DataSetIterator getDataSetIterator(boolean isTraining, WordVectors wordVectors, int minibatchSize,
-                                                      int maxSentenceLength, Random rng ) throws FileNotFoundException{
-//        String path = FilenameUtils.concat(DATA_PATH, (isTraining ? "aclImdb/train/" : "aclImdb/test/"));
-//        String positiveBaseDir = FilenameUtils.concat(path, "pos");
-//        String negativeBaseDir = FilenameUtils.concat(path, "neg");
+//        String pathFirstNegativeFile = FilenameUtils.concat(DATA_PATH, "aclImdb/test/neg/0_2.txt");
+//        String contentsFirstNegative = FileUtils.readFileToString(new File(pathFirstNegativeFile));
+//        INDArray featuresFirstNegative = ((CnnSentenceDataSetIterator)testIter).loadSingleSentence(contentsFirstNegative);
 //
-//        File filePositive = new File(positiveBaseDir);
-//        File fileNegative = new File(negativeBaseDir);
-//        
-//        Map<String,List<File>> reviewFilesMap = new HashMap<>();
-//        reviewFilesMap.put("Positive", Arrays.asList(filePositive.listFiles()));
-//        reviewFilesMap.put("Negative", Arrays.asList(fileNegative.listFiles()));
-    	
-//    	List<File> positiveFiles = new ArrayList<File>();
-//		List<File> negativeFiles = new ArrayList<File>();
-//		for (File f : DataHelper.getFilesFromDir(DataHelper.PREPROCESSED_DATA_DIR)){
-//			if (f.getName().contains("non-sarcy")){
-//				negativeFiles.add(f);
-//			} else {
-//				positiveFiles.add(f);
-//			}
-//		}
-//        Random r = new Random(100);
-//		Map<String,List<File>> reviewFilesMap = new HashMap<>();
-//		reviewFilesMap.put("Positive", positiveFiles);
-//		reviewFilesMap.put("Negative", negativeFiles);
-    	
-        if (wordVectors.getUNK() == null){
-        	System.out.println("getUNK() is null");
-        	wordVectors.setUNK("UNK");
-        }
-    	
-    	File filePositive = new File(DataHelper.TRAIN_DATA_DIR + "pos/");
-    	File fileNegative = new File(DataHelper.TRAIN_DATA_DIR + "neg/");
-    	Map<String,List<File>> reviewFilesMap = new HashMap<>();
-    	reviewFilesMap.put("Positive", Arrays.asList(filePositive.listFiles()));
-    	reviewFilesMap.put("Negative", Arrays.asList(fileNegative.listFiles()));
+//        INDArray predictionsFirstNegative = net.outputSingle(featuresFirstNegative);
+//        List<String> labels = testIter.getLabels();
+//
+//        System.out.println("\n\nPredictions for first negative review:");
+//        for( int i=0; i<labels.size(); i++ ){
+//            System.out.println("P(" + labels.get(i) + ") = " + predictionsFirstNegative.getDouble(i));
+//        }
+    }
+    
+    private static DataSetIterator getDataSetIterator(boolean isTraining, WordVectors wordVectors, int minibatchSize, int maxSentenceLength, Random rng ) throws FileNotFoundException{
 
         
-        LabeledSentenceProvider sentenceProvider = new FileLabeledSentenceProvider(reviewFilesMap, rng);
+        String find;
+        if (isTraining){
+        	find = "train";
+        } else {
+        	find = "test";
+        }
         
+        File dir = new File(DataHelper.PREPROCESSED_DATA_DIR + "2015-quick");
+        Collection<File> files = FileUtils.listFiles(dir, null, true);
+        System.out.println(files);
+        
+		List<String> sentences = new ArrayList<String>();
+		List<String> labels = new ArrayList<String>();
+		int posCount = 0;
+		int negCount = 0;
+		for (File f : files){
+			if (!f.getAbsolutePath().contains(find))
+				continue;
+			
+			List<String> s;
+			try {
+				s = FileUtils.readLines(f, "UTF-8");
+				sentences.addAll(s);
+				
+				String label;
+				if (f.getAbsolutePath().contains("pos")){
+					label = "positive";
+					posCount += s.size();
+				} else {
+					label = "negative";
+					negCount += s.size();
+				}
+				for (int i = 0; i < s.size(); i++){
+					labels.add(label);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		System.out.println("No. positive: " + posCount + ", No. negative: " + negCount);
+		LabeledSentenceProvider sentenceProvider = new CollectionLabeledSentenceProvider(sentences, labels);
+		
         return new CnnSentenceDataSetIterator.Builder()
             .sentenceProvider(sentenceProvider)
             .wordVectors(wordVectors)
