@@ -15,7 +15,7 @@ import opennlp.tools.stemmer.PorterStemmer;
 @SuppressWarnings("serial")
 public class TextPreProcessor implements SentencePreProcessor {
 	
-
+	private final static String stopWordsPath = "src/main/resources/stop-words.txt";
 	private final static Set<String> stopWords = getStopWords();
 	
 	private final PorterStemmer stemmer = new PorterStemmer();
@@ -74,7 +74,7 @@ public class TextPreProcessor implements SentencePreProcessor {
 	private static Set<String> getStopWords() {
 		Set<String> stopWords = null;
 		try {
-			stopWords = new HashSet<String>(FileUtils.readLines(new File("resources/stop-words.txt")));
+			stopWords = new HashSet<String>(FileUtils.readLines(new File(stopWordsPath)));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

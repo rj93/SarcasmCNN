@@ -44,16 +44,16 @@ public class TextCNN {
 	private int seed;
 	private Word2Vec embedding;
 	private int vectorSize;
-	private int maxSetenceLength;
+	private int maxSentenceLength;
 	private int cnnLayerFeatureMaps = 10;
 	private ComputationGraphConfiguration conf;
 	private ComputationGraph model;
 	
-	public TextCNN(int nChannels, int nOutputs, int batchSize, int nEpochs, Word2Vec embedding, int maxSetenceLength){
-		this(nChannels, nOutputs, batchSize, nEpochs, embedding, maxSetenceLength, 12345);
+	public TextCNN(int nChannels, int nOutputs, int batchSize, int nEpochs, Word2Vec embedding, int maxSentenceLength){
+		this(nChannels, nOutputs, batchSize, nEpochs, embedding, maxSentenceLength, 12345);
 	}
 	
-	public TextCNN(int nChannels, int nOutputs, int batchSize, int nEpochs, Word2Vec embedding, int maxSetenceLength, int seed){
+	public TextCNN(int nChannels, int nOutputs, int batchSize, int nEpochs, Word2Vec embedding, int maxSentenceLength, int seed){
 		this.nChannels = nChannels;
 		this.nOutputs = nOutputs;
 		this.batchSize = batchSize;
@@ -64,7 +64,7 @@ public class TextCNN {
 		this.embedding = embedding;
 		
 		this.vectorSize = embedding.getLayerSize();
-		this.maxSetenceLength = maxSetenceLength;
+		this.maxSentenceLength = maxSentenceLength;
 		this.seed = seed;
 		this.conf = getConf();
 		model = new ComputationGraph(conf);
@@ -84,35 +84,45 @@ public class TextCNN {
 	            .graphBuilder()
 	            .addInputs("input")
 	            .addLayer("cnn3", new ConvolutionLayer.Builder()
+	            	.name("cnn3")
 	                .kernelSize(3,vectorSize)
 	                .stride(1,vectorSize)
 	                .nIn(nChannels)
 	                .nOut(cnnLayerFeatureMaps)
-//	                .name("cnn3")
-//	                .adamMeanDecay(0.999)
-//	                .adamVarDecay(0.9)
+	                .adamMeanDecay(0.999)
+	                .adamVarDecay(0.9)
 	                .build(), "input")
 	            .addLayer("cnn4", new ConvolutionLayer.Builder()
+	            	.name("cnn4")
 	                .kernelSize(4,vectorSize)
 	                .stride(1,vectorSize)
 	                .nIn(nChannels)
 	                .nOut(cnnLayerFeatureMaps)
+	                .adamMeanDecay(0.999)
+	                .adamVarDecay(0.9)
 	                .build(), "input")
 	            .addLayer("cnn5", new ConvolutionLayer.Builder()
+	            	.name("cnn5")
 	                .kernelSize(5,vectorSize)
 	                .stride(1,vectorSize)
 	                .nIn(nChannels)
 	                .nOut(cnnLayerFeatureMaps)
+	                .adamMeanDecay(0.999)
+	                .adamVarDecay(0.9)
 	                .build(), "input")
 	            .addVertex("merge", new MergeVertex(), "cnn3", "cnn4", "cnn5")
 	            .addLayer("globalPool", new GlobalPoolingLayer.Builder()
+	            	.name("globalPool")
 	                .poolingType(PoolingType.MAX)
 	                .build(), "merge")
 	            .addLayer("out", new OutputLayer.Builder()
+	            	.name("out")
 	                .lossFunction(LossFunctions.LossFunction.MCXENT)
 	                .activation(Activation.SOFTMAX)
 	                .nIn(3*cnnLayerFeatureMaps)
 	                .nOut(nOutputs)
+	                .adamMeanDecay(0.999)
+	                .adamVarDecay(0.9)
 	                .build(), "globalPool")
 	            .setOutputs("out")
 	            .build();
@@ -156,11 +166,11 @@ public class TextCNN {
         		.sentenceProvider(sentenceProvider)
                 .wordVectors(embedding)
                 .minibatchSize(batchSize)
-                .maxSentenceLength(maxSetenceLength)
+                .maxSentenceLength(maxSentenceLength)
                 .useNormalizedWordVectors(false)
                 .unknownWordHandling(UnknownWordHandling.UseUnknownVector)
                 .build();
-		
+
         return iter;
     }
 	
@@ -175,7 +185,7 @@ public class TextCNN {
 			long start = System.nanoTime();
 			model.fit(trainIter);
 			long diff = System.nanoTime() - start;
-			System.out.print("complete in " + diff / 1000000 + " ms. Starting evaluation... ");
+			System.out.print("complete in " + diff / 1000000 + " ms.");
 			
 			start = System.nanoTime();
             Evaluation evaluation = model.evaluate(testIter);
@@ -195,23 +205,16 @@ public class TextCNN {
 		ModelSerializer.writeModel(model, file, saveUpdater);
 	}
 	
-	public void test(){
-		
-	}
-	
-	public void predict(){
-		
+	public void test(List<File> testFiles) throws FileNotFoundException {
 	}
 	
 	public static void main(String[] args) throws IOException {
-		File dir = new File(DataHelper.PREPROCESSED_DATA_DIR + "/2015-quick");
 		
-		// CnnSentenceDataSetIterator
-//		Word2Vec embedding = WordVectorSerializer.readWord2VecModel(DataHelper.WORD2VEC_DIR + "all-preprocessed-300.emb");
 		System.out.println("Reading word embedding");
 		Word2Vec embedding = WordVectorSerializer.readWord2VecModel(DataHelper.GOOGLE_NEWS_WORD2VEC);
 		System.out.println("Complete");
-		
+
+		File dir = new File(DataHelper.PREPROCESSED_DATA_DIR + "/2015-quick");
 		List<File> trainFiles = DataHelper.getFilesFromDir(dir, new TrainFileFilter(), true);
 		List<File> testFiles = DataHelper.getFilesFromDir(dir, new TestFileFilter(), true);
 		
@@ -219,7 +222,6 @@ public class TextCNN {
 		int outputs = 2;
 		int batchSize = 64;
 		int epochs = 5;
-		int iterations = 1;
 		int maxSentenceLength = 200;
 		
 		TextCNN cnn = new TextCNN(channels, outputs, batchSize, epochs, embedding, maxSentenceLength);
