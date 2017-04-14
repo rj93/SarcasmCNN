@@ -70,7 +70,7 @@ public class TextCNN {
 	private WordVectors embedding;
 	private int vectorSize;
 	private int maxSentenceLength;
-	private int cnnLayerFeatureMaps = 10;
+	private int cnnLayerFeatureMaps = 100;
 	private ComputationGraphConfiguration conf;
 	private ComputationGraph model;
 	private UIServer uiServer = null;
@@ -106,7 +106,7 @@ public class TextCNN {
 	            .seed(seed)
 	            .iterations(iterations)
 	            .regularization(true).l2(0.0001)
-//	            .learningRate(0.01)
+	            .learningRate(0.01)
 	            .graphBuilder()
 	            .addInputs("input")
 	            .addLayer("cnn3", new ConvolutionLayer.Builder()
@@ -152,6 +152,7 @@ public class TextCNN {
 	                .build(), "globalPool")
 	            .setOutputs("out")
 	            .build();
+		
 		return conf;
 	}
 	
@@ -184,7 +185,7 @@ public class TextCNN {
 			}
 		}
 		
-		System.out.println("No. positive: " + posCount + ", No. negative: " + negCount);
+		logger.info("No. positive: " + posCount + ", No. negative: " + negCount);
 		LabeledSentenceProvider sentenceProvider = new CollectionLabeledSentenceProvider(sentences, labels, new Random(seed));
 		
 		
@@ -201,32 +202,30 @@ public class TextCNN {
 	
 	public void train(List<File> trainFiles, List<File> testFiles) throws IOException {
 		
-		System.out.print("Train data - ");
 		DataSetIterator trainIter = getDataSetIterator(trainFiles);
-		System.out.print("Test data - ");
 		DataSetIterator testIter = getDataSetIterator(testFiles);
 		
-		System.out.println("Training Model...");
+		logger.info("Training Model...");
 		for (int i = 0; i < nEpochs; i++){
 			
 			
-			System.out.print("Starting epoch " + i + "... ");
+			logger.info("Starting epoch " + i + "... ");
 			long start = System.nanoTime();
 			model.fit(trainIter);
 			long diff = System.nanoTime() - start;
-			System.out.print("complete in " + diff / 1000000 + " ms.");
+			logger.info("Epoch " + i + " complete in " + diff / 1000000 + " ms. Starting evaluation...");
 			
 			start = System.nanoTime();
             Evaluation evaluation = model.evaluate(testIter);
             diff = System.nanoTime() - start;
-            System.out.println("complete in: " + diff / (1000 * 1000) + "ms");
+            logger.info("Evaluation complete in: " + diff / (1000 * 1000) + " ms");
             
-            System.out.println(evaluation.stats());
+            logger.info(evaluation.stats());
             
             trainIter.reset();
             testIter.reset();
 		}
-		System.out.println("Training Complete");
+		logger.info("Training Complete");
 	}
 	
 	public void trainTest(List<File> trainFiles, List<File> testFiles) throws IOException {
@@ -249,11 +248,11 @@ public class TextCNN {
 		
 		EarlyStoppingResult<ComputationGraph> result = trainer.fit();
 		
-		System.out.println("Termination reason: " + result.getTerminationReason());
-		System.out.println("Termination details: " + result.getTerminationDetails());
-		System.out.println("Total epochs: " + result.getTotalEpochs());
-		System.out.println("Best epoch number: " + result.getBestModelEpoch());
-		System.out.println("Score at best epoch: " + result.getBestModelScore());
+		logger.info("Termination reason: " + result.getTerminationReason());
+		logger.info("Termination details: " + result.getTerminationDetails());
+		logger.info("Total epochs: " + result.getTotalEpochs());
+		logger.info("Best epoch number: " + result.getBestModelEpoch());
+		logger.info("Score at best epoch: " + result.getBestModelScore());
 		
 		ComputationGraph bestModel = result.getBestModel();
 		testIter.reset();
@@ -261,9 +260,9 @@ public class TextCNN {
 		long start = System.nanoTime();
         Evaluation evaluation = bestModel.evaluate(testIter);
         long diff = System.nanoTime() - start;
-        System.out.println("complete in: " + diff / (1000 * 1000) + "ms");
+        logger.info("complete in: " + diff / (1000 * 1000) + "ms");
         
-        System.out.println(evaluation.stats());
+        logger.info(evaluation.stats());
 	}
 	
 	private static String getModelDir(){
@@ -274,18 +273,10 @@ public class TextCNN {
 	
 	
 	public void startUIServer(){
-		startUIServer(false);
-	}
-	
-	public void startUIServer(boolean allowRemoteConnections){
 		uiServer = UIServer.getInstance();
-		if (allowRemoteConnections)
-			uiServer.enableRemoteListener();
-		
 		StatsStorage statsStorage = new InMemoryStatsStorage(); 
 		uiServer.attach(statsStorage);
 		model.setListeners(new StatsListener(statsStorage));
-
 	}
 	
 	public void stopUIServer(){
@@ -307,27 +298,27 @@ public class TextCNN {
 	public static void main(String[] args) throws IOException {
 		
 		logger.info("Reading word embedding");
-		WordVectors wordVectors = WordVectorSerializer.loadStaticModel(new File(DataHelper.GOOGLE_NEWS_WORD2VEC));
-//		Word2Vec embedding = WordVectorSerializer.readWord2VecModel(DataHelper.GOOGLE_NEWS_WORD2VEC);
+		WordVectors wordVectors = WordVectorSerializer.loadStaticModel(new File(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb"));
 		logger.info("Reading word embedding - complete");
 
-		File dir = new File(DataHelper.PREPROCESSED_DATA_DIR + "/2014");
+		File dir = new File(DataHelper.PREPROCESSED_DATA_DIR + "/2015-quick");
 		List<File> trainFiles = DataHelper.getFilesFromDir(dir, new TrainFileFilter(), true);
 		List<File> testFiles = DataHelper.getFilesFromDir(dir, new TestFileFilter(), true);
 		
 		int channels = 1;
 		int outputs = 2;
-		int batchSize = 64;
+		int batchSize = 32;
 		int epochs = 5;
 		int maxSentenceLength = 50;
 		
 		TextCNN cnn = new TextCNN(channels, outputs, batchSize, epochs, wordVectors, maxSentenceLength);
-		cnn.startUIServer(true);
+		cnn.startUIServer();
 		long start = System.currentTimeMillis();
 		cnn.train(trainFiles, testFiles);
-		cnn.stopUIServer();
 		long end = System.currentTimeMillis();
-		System.out.println("Time taken: " + (end - start));
+		logger.info("Time taken: " + (end - start));
+		
+		System.exit(0);
 		
 	}
 }

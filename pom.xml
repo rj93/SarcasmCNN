@@ -152,6 +152,13 @@
 		    <version>${log4j.version}</version>
 		</dependency>
 		
+		<!-- CSV -->
+		<dependency>
+		    <groupId>com.opencsv</groupId>
+		    <artifactId>opencsv</artifactId>
+		    <version>3.9</version>
+		</dependency>
+		
     </dependencies>
     
 
@@ -221,6 +228,30 @@
                     <target>${java.version}</target>
                 </configuration>
             </plugin>
+        
+	        <plugin>
+			  	<artifactId>maven-assembly-plugin</artifactId>
+			  	<configuration>
+			  		<archive>
+			      		<manifest>
+			        		<mainClass>io.rj93.sarcasm.Main</mainClass>
+			      		</manifest>
+			    	</archive>
+			    	<descriptorRefs>
+			      		<descriptorRef>jar-with-dependencies</descriptorRef>
+			    	</descriptorRefs>
+			  	</configuration>
+			  	<executions>
+			    	<execution>
+			      		<id>make-assembly</id>
+			      		<phase>package</phase>
+			      		<goals>
+			        		<goal>single</goal>
+			      		</goals>
+			    	</execution>
+				</executions>
+			</plugin>
+			
         </plugins>
     </build>
 

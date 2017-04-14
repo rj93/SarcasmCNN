@@ -3,6 +3,7 @@ package io.rj93.sarcasm.data;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -12,10 +13,14 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.filefilter.FileFileFilter;
 import org.apache.commons.io.filefilter.FileFilterUtils;
+
+import com.opencsv.CSVReader;
 
 public class DataHelper {
 	
@@ -29,6 +34,7 @@ public class DataHelper {
 	public final static String TEST_DATA_DIR = PREPROCESSED_DATA_DIR + "test/";
 	public final static String WORD2VEC_DIR = DATA_DIR + "word2vec/";
 	public final static String MODELS_DIR = DATA_DIR + "models/";
+	public final static String REDDIT_COMP_DIR = DATA_DIR + "extra_data/reddit_competition/";
 	
 	
 	public final static String GOOGLE_NEWS_WORD2VEC = WORD2VEC_DIR + "google/GoogleNews-vectors-negative300.bin";
@@ -102,6 +108,26 @@ public class DataHelper {
 			}
 		}
 		System.out.println("Skipped " + count + " files");
+	}
+	
+	public static Map<String, String> getRedditCompDataSet(boolean train) throws IOException {
+		
+		Map<String, String> data = new HashMap<String, String>();
+		File f;
+		if (train)
+			f = new File(REDDIT_COMP_DIR + "reddit_training.csv");
+		else 
+			f = new File(REDDIT_COMP_DIR + "reddit_test.csv");
+		
+		CSVReader reader = new CSVReader(new FileReader(f));
+	    String [] nextLine;
+	    while ((nextLine = reader.readNext()) != null) {
+	    	String s = nextLine[1];
+	    	String label = (nextLine[10] == "yes") ? "positive" : "negative";
+	    	data.put(s, label);
+	    }
+	    
+		return data;
 	}
 
 }
