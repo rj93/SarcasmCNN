@@ -28,6 +28,8 @@ public class DataHelper {
 	public final static String EVAL_DATA_DIR = PREPROCESSED_DATA_DIR + "eval/";
 	public final static String TEST_DATA_DIR = PREPROCESSED_DATA_DIR + "test/";
 	public final static String WORD2VEC_DIR = DATA_DIR + "word2vec/";
+	public final static String MODELS_DIR = DATA_DIR + "models/";
+	
 	
 	public final static String GOOGLE_NEWS_WORD2VEC = WORD2VEC_DIR + "google/GoogleNews-vectors-negative300.bin";
 	
