@@ -230,7 +230,5 @@ public class TextCNN {
 		long end = System.currentTimeMillis();
 		System.out.println("Time taken: " + (end - start));
 		
-
-		
 	}
 }

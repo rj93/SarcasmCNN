@@ -20,9 +20,10 @@ import org.apache.commons.io.filefilter.FileFilterUtils;
 public class DataHelper {
 	
 	public final static String DATA_DIR = getDataDir();
-	public final static String REDDIT_DATA_DIR = DATA_DIR + "reddit_data/";
-	public final static String SORTED_DATA_DIR = DATA_DIR + "output_data/";
+	public final static String REDDIT_RAW_DIR = DATA_DIR + "reddit_raw/";
+	public final static String REDDIT_FILTERED_DIR = DATA_DIR + "reddit_filtered/";
 	public final static String PREPROCESSED_DATA_DIR = DATA_DIR + "preprocessed_data/";
+	public final static String PREPROCESSED_DATA_STEMMED_DIR = DATA_DIR + "preprocessed_data_stemmed/";
 	public final static String TRAIN_DATA_DIR = DATA_DIR + "train/";
 	public final static String EVAL_DATA_DIR = PREPROCESSED_DATA_DIR + "eval/";
 	public final static String TEST_DATA_DIR = PREPROCESSED_DATA_DIR + "test/";

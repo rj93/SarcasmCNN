@@ -148,7 +148,7 @@ public class FilterFromRedditRaw implements Runnable {
 	}
 	
 	public static void main(String[] args) {
-		File redditDataDir = new File(DataHelper.REDDIT_DATA_DIR);
+		File redditDataDir = new File(DataHelper.REDDIT_RAW_DIR);
 		
 		try {
 			List<File> compressedFiles = DataHelper.getFilesFromDir(redditDataDir, true, new FilenameFilter() {
@@ -161,7 +161,7 @@ public class FilterFromRedditRaw implements Runnable {
 			ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 			int id = 0;
 			for (File f : compressedFiles){
-				String outputDir = DataHelper.SORTED_DATA_DIR + f.getParentFile().getName() + "/";
+				String outputDir = DataHelper.REDDIT_FILTERED_DIR + f.getParentFile().getName() + "/";
 				executor.execute(new FilterFromRedditRaw(id++, f.getAbsolutePath(), outputDir));
 			}
 			executor.shutdown();
