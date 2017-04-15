@@ -1,25 +1,21 @@
 package io.rj93.sarcasm.iterators;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.deeplearning4j.berkeley.Pair;
 import org.deeplearning4j.iterator.LabeledSentenceProvider;
-import org.deeplearning4j.iterator.provider.LabelAwareConverter;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
-import org.deeplearning4j.text.documentiterator.LabelAwareDocumentIterator;
-import org.deeplearning4j.text.documentiterator.LabelAwareIterator;
-import org.deeplearning4j.text.documentiterator.interoperability.DocumentIteratorConverter;
-import org.deeplearning4j.text.sentenceiterator.interoperability.SentenceIteratorConverter;
-import org.deeplearning4j.text.sentenceiterator.labelaware.LabelAwareSentenceIterator;
 import org.deeplearning4j.text.tokenization.tokenizer.Tokenizer;
 import org.deeplearning4j.text.tokenization.tokenizerfactory.DefaultTokenizerFactory;
 import org.deeplearning4j.text.tokenization.tokenizerfactory.TokenizerFactory;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.dataset.api.DataSetPreProcessor;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.dataset.api.MultiDataSetPreProcessor;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
@@ -27,13 +23,10 @@ import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.indexing.INDArrayIndex;
 import org.nd4j.linalg.indexing.NDArrayIndex;
 
-import io.rj93.sarcasm.examples.CnnSentenceDataSetIterator;
-import io.rj93.sarcasm.examples.CnnSentenceDataSetIterator.Builder;
-import io.rj93.sarcasm.examples.CnnSentenceDataSetIterator.UnknownWordHandling;
-import lombok.NonNull;
-
 @SuppressWarnings("serial")
 public class CnnSentenceMultiDataSetIterator implements MultiDataSetIterator {
+	
+	private static final Logger logger = LogManager.getLogger(CnnSentenceMultiDataSetIterator.class);
 	
 	public enum UnknownWordHandling {
         RemoveWord, UseUnknownVector
@@ -82,6 +75,7 @@ public class CnnSentenceMultiDataSetIterator implements MultiDataSetIterator {
             this.labelClassMap.put(s, count++);
         }
         
+        wordVectorSizes = new ArrayList<Integer>(wordVectors.size());
         for (WordVectors wordVector : wordVectors){
         	wordVectorSizes.add(wordVector.getWordVector(wordVector.vocab().wordAtIndex(0)).length);
         }
@@ -104,7 +98,7 @@ public class CnnSentenceMultiDataSetIterator implements MultiDataSetIterator {
 
 	@Override
 	public MultiDataSet next(int num) {
-		// TODO 
+		
 		if (sentenceProvider == null) {
             throw new UnsupportedOperationException("Cannot do next/hasNext without a sentence provider");
         }
@@ -135,33 +129,46 @@ public class CnnSentenceMultiDataSetIterator implements MultiDataSetIterator {
 	        }
         }
         
-        
+//        int currMinibatchSize = tokenizedSentences.size();
+//        INDArray[] labels = new INDArray[channels];
+//        for (int channel = 0; channel < channels; channel++){
+//        	labels[channel] = Nd4j.create(currMinibatchSize, numClasses);
+//        	
+//        	for (int i = 0; i < currMinibatchSize; i++){
+//        		String labelString = tokenizedSentences.get(i).getSecond();
+//            	if (!labelClassMap.containsKey(labelString)) 
+//                    throw new IllegalStateException("Got label \"" + labelString + "\" that is not present in list of LabeledSentenceProvider labels");
+//            	
+//            	int labelIdx = labelClassMap.get(labelString);
+//            	labels[channel].putScalar(i, labelIdx, 1.0);
+//        	}
+//        }
         int currMinibatchSize = tokenizedSentences.size();
-        INDArray[] labels = new INDArray[channels]; // need to be array?
-        for (int i = 0; i < currMinibatchSize; i++){
-        	String labelString = tokenizedSentences.get(i).getSecond();
-        	if (!labelClassMap.containsKey(labelString)) 
-                throw new IllegalStateException("Got label \"" + labelString + "\" that is not present in list of LabeledSentenceProvider labels");
-        	
-        	int labelIdx = labelClassMap.get(labelString);
-        	for (int j = 0; j < channels; j++){
-        		labels[j].put(i, labelIdx, 1.0);
-        	}
+        INDArray[] labels = {Nd4j.create(currMinibatchSize, numClasses)};
+        for (int i = 0; i < tokenizedSentences.size(); i++) {
+            String labelStr = tokenizedSentences.get(i).getSecond();
+            if (!labelClassMap.containsKey(labelStr)) {
+                throw new IllegalStateException("Got label \"" + labelStr + "\" that is not present in list of LabeledSentenceProvider labels");
+            }
+
+            int labelIdx = labelClassMap.get(labelStr);
+
+            labels[0].putScalar(i, labelIdx, 1.0);
         }
         
-        
         int[][] featuresShapes = new int[channels][4];
-        for (int i = 0; i < channels; i++){
+        for (int channel = 0; channel < channels; channel++){
 	        int[] featuresShape = new int[4];
 	        featuresShape[0] = currMinibatchSize;
 	        featuresShape[1] = 1;
 	        if (sentencesAlongHeight) {
-	            featuresShape[2] = maxLengths[i];
-	            featuresShape[3] = wordVectorSizes.get(i);
+	            featuresShape[2] = maxLengths[channel];
+	            featuresShape[3] = wordVectorSizes.get(channel);
 	        } else {
-	            featuresShape[2] = wordVectorSizes.get(i);
-	            featuresShape[3] = maxLengths[i];
+	            featuresShape[2] = wordVectorSizes.get(channel);
+	            featuresShape[3] = maxLengths[channel];
 	        }
+	        featuresShapes[channel] = featuresShape;
         }
         
         INDArray[] features = new INDArray[channels];
@@ -208,6 +215,8 @@ public class CnnSentenceMultiDataSetIterator implements MultiDataSetIterator {
         MultiDataSet mds = new MultiDataSet(features, labels, featuresMask, null);
         if (dataSetPreProcessor != null)
         	dataSetPreProcessor.preProcess(mds);
+        
+        cursor += currMinibatchSize;
         
 		return mds;
 	}

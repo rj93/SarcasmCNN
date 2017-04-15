@@ -66,7 +66,8 @@ public class TextCNN {
 	private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 			
 	private int nChannels;
-	private int nOutputs;
+	private String[] channelNames;
+	private int nOutputs; // number of labels
 	private int batchSize;
 	private int nEpochs;
 	private int iterations = 1;
@@ -88,8 +89,13 @@ public class TextCNN {
 	}
 	
 	public TextCNN(int nOutputs, int batchSize, int nEpochs, List<WordVectors> embeddings, int maxSentenceLength, int seed){
-		this.nChannels = 1; 
+		this.nChannels = embeddings.size();
+		channelNames = new String[nChannels];
+		for (int i = 0; i < nChannels; i++){
+			channelNames[i] = "input" + i;
+		}
 		this.nOutputs = nOutputs;
+		
 		this.batchSize = batchSize;
 		this.nEpochs = nEpochs;
 		
@@ -110,6 +116,7 @@ public class TextCNN {
         model.init();
 	}
 	
+
 	private ComputationGraphConfiguration getConf(){
 		ComputationGraphConfiguration conf = new NeuralNetConfiguration.Builder()
 	            .weightInit(WeightInit.RELU)
@@ -121,7 +128,7 @@ public class TextCNN {
 	            .regularization(true).l2(0.0001)
 	            .learningRate(0.01)
 	            .graphBuilder()
-	            .addInputs("input")
+	            .addInputs(channelNames)
 	            .addLayer("cnn3", new ConvolutionLayer.Builder()
 	            	.name("cnn3")
 	                .kernelSize(3,vectorSize)
@@ -130,7 +137,7 @@ public class TextCNN {
 	                .nOut(cnnLayerFeatureMaps)
 	                .adamMeanDecay(0.999)
 	                .adamVarDecay(0.9)
-	                .build(), "input")
+	                .build(), channelNames)
 	            .addLayer("cnn4", new ConvolutionLayer.Builder()
 	            	.name("cnn4")
 	                .kernelSize(4,vectorSize)
@@ -139,7 +146,7 @@ public class TextCNN {
 	                .nOut(cnnLayerFeatureMaps)
 	                .adamMeanDecay(0.999)
 	                .adamVarDecay(0.9)
-	                .build(), "input")
+	                .build(), channelNames)
 	            .addLayer("cnn5", new ConvolutionLayer.Builder()
 	            	.name("cnn5")
 	                .kernelSize(5,vectorSize)
@@ -148,7 +155,7 @@ public class TextCNN {
 	                .nOut(cnnLayerFeatureMaps)
 	                .adamMeanDecay(0.999)
 	                .adamVarDecay(0.9)
-	                .build(), "input")
+	                .build(), channelNames)
 	            .addVertex("merge", new MergeVertex(), "cnn3", "cnn4", "cnn5")
 	            .addLayer("globalPool", new GlobalPoolingLayer.Builder()
 	            	.name("globalPool")
@@ -213,7 +220,8 @@ public class TextCNN {
         return iter;
     }
 	
-	private MultiDataSetIterator getMultiDataSetIterator(List<File> files) throws FileNotFoundException{
+	private MultiDataSetIterator getMultiDataSetIterator(List<File> files) throws FileNotFoundException {
+		
 		List<String> sentences = new ArrayList<String>();
 		List<String> labels = new ArrayList<String>();
 		int posCount = 0;
@@ -258,6 +266,19 @@ public class TextCNN {
 	
 	public void train(List<File> trainFiles, List<File> testFiles) throws IOException {
 		
+		logger.info("train - trainFiles: " + trainFiles.size() + ", testFiles: " + testFiles.size());
+		
+		if (embeddings.size() == 1){
+			trainMultiChannel(trainFiles, testFiles);
+		} else {
+			trainMultiChannel(trainFiles, testFiles);
+		}
+	}
+	
+	private void trainSingleChannel(List<File> trainFiles, List<File> testFiles) throws IOException {
+		
+		logger.info("trainSingleChannel");
+		
 		DataSetIterator trainIter = getDataSetIterator(trainFiles);
 		DataSetIterator testIter = getDataSetIterator(testFiles);
 		
@@ -284,7 +305,9 @@ public class TextCNN {
 		logger.info("Training Complete");
 	}
 	
-	public void trainMultiChannel(List<File> trainFiles, List<File> testFiles) throws IOException {
+	private void trainMultiChannel(List<File> trainFiles, List<File> testFiles) throws IOException {
+		
+		logger.info("trainMultiChannel");
 		
 		MultiDataSetIterator trainIter = getMultiDataSetIterator(trainFiles);
 		MultiDataSetIterator testIter = getMultiDataSetIterator(testFiles);
@@ -314,6 +337,8 @@ public class TextCNN {
 	}
 	
 	public void trainTest(List<File> trainFiles, List<File> testFiles) throws IOException {
+		
+		logger.info("trainTest - trainFiles: " + trainFiles.size() + ", testFiles: " + testFiles.size());
 		
 		String dir = getModelDir();
 		new File(dir).mkdirs();
@@ -385,15 +410,14 @@ public class TextCNN {
 		logger.info("Reading word embeddings");
 		List<WordVectors> embeddings = new ArrayList<WordVectors>();
 		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.GOOGLE_NEWS_WORD2VEC)));
-		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb")));
+//		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb")));
 		logger.info("Reading word embedding - complete");
 
 		File dir = new File(DataHelper.PREPROCESSED_DATA_DIR + "/2015-quick");
 		List<File> trainFiles = DataHelper.getFilesFromDir(dir, new TrainFileFilter(), true);
 		List<File> testFiles = DataHelper.getFilesFromDir(dir, new TestFileFilter(), true);
 		
-		int channels = 1;
-		int outputs = 2;
+		int outputs = 2; 
 		int batchSize = 32;
 		int epochs = 5;
 		int maxSentenceLength = 50;
@@ -405,7 +429,7 @@ public class TextCNN {
 			cnn.train(trainFiles, testFiles);
 			long end = System.currentTimeMillis();
 			logger.info("Time taken: " + (end - start));
-		} catch (DL4JInvalidInputException e){
+		} catch (Exception e){
 			e.printStackTrace();
 		} finally {
 			System.exit(-1);
