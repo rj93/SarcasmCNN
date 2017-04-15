@@ -183,7 +183,7 @@ public class CnnSentenceMultiDataSetIterator implements MultiDataSetIterator {
         			INDArray vector = getVector(wordVector, currSentence.get(word));
         			
         			INDArrayIndex[] indices = new INDArrayIndex[4];
-                    indices[0] = NDArrayIndex.point(channel);
+                    indices[0] = NDArrayIndex.point(i);
                     indices[1] = NDArrayIndex.point(0);
                     if (sentencesAlongHeight) {
                         indices[2] = NDArrayIndex.point(word);
@@ -224,7 +224,7 @@ public class CnnSentenceMultiDataSetIterator implements MultiDataSetIterator {
 	private INDArray getVector(WordVectors wordVector, String word) {
         INDArray vector;
         if (unknownWordHandling == UnknownWordHandling.UseUnknownVector && word == UNKNOWN_WORD_SENTINEL) { //Yes, this *should* be using == for the sentinel String here
-            vector = unknown;
+        	vector = unknown;
         } else {
             if (useNormalizedWordVectors) {
                 vector = wordVector.getWordVectorMatrixNormalized(word);

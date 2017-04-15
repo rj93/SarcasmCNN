@@ -38,6 +38,9 @@ public class DataHelper {
 	
 	
 	public final static String GOOGLE_NEWS_WORD2VEC = WORD2VEC_DIR + "google/GoogleNews-vectors-negative300.bin";
+	public final static String GLOVE_SMALL = WORD2VEC_DIR + "GloVe/glove.6B.50d.txt";
+	public final static String GLOVE_MEDIUM = WORD2VEC_DIR + "GloVe/glove.6B.100d.txt";
+	public final static String GLOVE_LARGE = WORD2VEC_DIR + "GloVe/glove.840B.300d.txt";
 	
 	private static String getDataDir(){
 		String dir = null;

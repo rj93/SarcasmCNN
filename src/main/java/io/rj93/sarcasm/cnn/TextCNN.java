@@ -269,7 +269,7 @@ public class TextCNN {
 		logger.info("train - trainFiles: " + trainFiles.size() + ", testFiles: " + testFiles.size());
 		
 		if (embeddings.size() == 1){
-			trainMultiChannel(trainFiles, testFiles);
+			trainSingleChannel(trainFiles, testFiles);
 		} else {
 			trainMultiChannel(trainFiles, testFiles);
 		}
@@ -410,7 +410,7 @@ public class TextCNN {
 		logger.info("Reading word embeddings");
 		List<WordVectors> embeddings = new ArrayList<WordVectors>();
 		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.GOOGLE_NEWS_WORD2VEC)));
-//		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb")));
+		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb")));
 		logger.info("Reading word embedding - complete");
 
 		File dir = new File(DataHelper.PREPROCESSED_DATA_DIR + "/2015-quick");
