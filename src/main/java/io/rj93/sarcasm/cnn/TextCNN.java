@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -24,6 +25,7 @@ import org.deeplearning4j.earlystopping.termination.MaxTimeIterationTerminationC
 import org.deeplearning4j.earlystopping.trainer.EarlyStoppingGraphTrainer;
 import org.deeplearning4j.earlystopping.trainer.EarlyStoppingTrainer;
 import org.deeplearning4j.eval.Evaluation;
+import org.deeplearning4j.exception.DL4JInvalidInputException;
 import org.deeplearning4j.iterator.LabeledSentenceProvider;
 import org.deeplearning4j.iterator.CnnSentenceDataSetIterator;
 import org.deeplearning4j.iterator.CnnSentenceDataSetIterator.UnknownWordHandling;
@@ -49,12 +51,14 @@ import org.deeplearning4j.ui.storage.InMemoryStatsStorage;
 import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
+import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.springframework.format.datetime.standard.DateTimeContextHolder;
 
 import io.rj93.sarcasm.data.DataHelper;
 import io.rj93.sarcasm.filters.TestFileFilter;
 import io.rj93.sarcasm.filters.TrainFileFilter;
+import io.rj93.sarcasm.iterators.CnnSentenceMultiDataSetIterator;
 
 public class TextCNN {
 	
@@ -67,7 +71,7 @@ public class TextCNN {
 	private int nEpochs;
 	private int iterations = 1;
 	private int seed;
-	private WordVectors embedding;
+	private List<WordVectors> embeddings;
 	private int vectorSize;
 	private int maxSentenceLength;
 	private int cnnLayerFeatureMaps = 100;
@@ -75,21 +79,30 @@ public class TextCNN {
 	private ComputationGraph model;
 	private UIServer uiServer = null;
 	
-	public TextCNN(int nChannels, int nOutputs, int batchSize, int nEpochs, WordVectors embedding, int maxSentenceLength){
-		this(nChannels, nOutputs, batchSize, nEpochs, embedding, maxSentenceLength, 12345);
+	public TextCNN(int nOutputs, int batchSize, int nEpochs, WordVectors embedding, int maxSentenceLength){
+		this(nOutputs, batchSize, nEpochs, Arrays.asList(embedding), maxSentenceLength, 12345);
 	}
 	
-	public TextCNN(int nChannels, int nOutputs, int batchSize, int nEpochs, WordVectors embedding, int maxSentenceLength, int seed){
-		this.nChannels = nChannels;
+	public TextCNN(int nOutputs, int batchSize, int nEpochs, List<WordVectors> embeddings, int maxSentenceLength){
+		this(nOutputs, batchSize, nEpochs, embeddings, maxSentenceLength, 12345);
+	}
+	
+	public TextCNN(int nOutputs, int batchSize, int nEpochs, List<WordVectors> embeddings, int maxSentenceLength, int seed){
+		this.nChannels = 1; 
 		this.nOutputs = nOutputs;
 		this.batchSize = batchSize;
 		this.nEpochs = nEpochs;
 		
-		if (embedding.getUNK() == null)
-			embedding.setUNK("UNK");
-		this.embedding = embedding;
+		int vectorSize = 0;
+		for (WordVectors embedding : embeddings){
+			if (embedding.getUNK() == null)
+				embedding.setUNK("UNK");
+			vectorSize += embedding.getWordVector(embedding.vocab().wordAtIndex(0)).length;
+		}
+		this.embeddings = embeddings;
+		this.vectorSize = vectorSize;
+		logger.info("Vector total size: " + vectorSize);
 		
-		this.vectorSize = 300;
 		this.maxSentenceLength = maxSentenceLength;
 		this.seed = seed;
 		this.conf = getConf();
@@ -191,7 +204,7 @@ public class TextCNN {
 		
 		DataSetIterator iter = new CnnSentenceDataSetIterator.Builder()
         		.sentenceProvider(sentenceProvider)
-                .wordVectors(embedding)
+                .wordVectors(embeddings.get(0))
                 .minibatchSize(batchSize)
                 .maxSentenceLength(maxSentenceLength)
                 .useNormalizedWordVectors(false)
@@ -199,6 +212,49 @@ public class TextCNN {
                 .build();
         return iter;
     }
+	
+	private MultiDataSetIterator getMultiDataSetIterator(List<File> files) throws FileNotFoundException{
+		List<String> sentences = new ArrayList<String>();
+		List<String> labels = new ArrayList<String>();
+		int posCount = 0;
+		int negCount = 0;
+		for (File f : files){
+			
+			List<String> s;
+			try {
+				s = FileUtils.readLines(f, "UTF-8");
+				sentences.addAll(s);
+				
+				String label;
+				if (f.getAbsolutePath().contains("pos")){
+					label = "positive";
+					posCount += s.size();
+				} else {
+					label = "negative";
+					negCount += s.size();
+				}
+				for (int i = 0; i < s.size(); i++){
+					labels.add(label);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		logger.info("No. positive: " + posCount + ", No. negative: " + negCount);
+		LabeledSentenceProvider sentenceProvider = new CollectionLabeledSentenceProvider(sentences, labels, new Random(seed));
+		
+		MultiDataSetIterator iter = new CnnSentenceMultiDataSetIterator.Builder()
+        		.sentenceProvider(sentenceProvider)
+                .wordVectors(embeddings)
+                .minibatchSize(batchSize)
+                .maxSentenceLength(maxSentenceLength)
+                .useNormalizedWordVectors(false)
+                .unknownWordHandling(io.rj93.sarcasm.iterators.CnnSentenceMultiDataSetIterator.UnknownWordHandling.UseUnknownVector)
+                .build();
+		
+		return iter;
+	}
 	
 	public void train(List<File> trainFiles, List<File> testFiles) throws IOException {
 		
@@ -221,6 +277,35 @@ public class TextCNN {
             logger.info("Evaluation complete in: " + diff / (1000 * 1000) + " ms");
             
             logger.info(evaluation.stats());
+            
+            trainIter.reset();
+            testIter.reset();
+		}
+		logger.info("Training Complete");
+	}
+	
+	public void trainMultiChannel(List<File> trainFiles, List<File> testFiles) throws IOException {
+		
+		MultiDataSetIterator trainIter = getMultiDataSetIterator(trainFiles);
+		MultiDataSetIterator testIter = getMultiDataSetIterator(testFiles);
+		
+		logger.info("Training Model...");
+		for (int i = 0; i < nEpochs; i++){
+			
+			
+			logger.info("Starting epoch " + i + "... ");
+			long start = System.nanoTime();
+			model.fit(trainIter);
+			long diff = System.nanoTime() - start;
+			logger.info("Epoch " + i + " complete in " + diff / 1000000 + " ms. Starting evaluation...");
+			
+//			start = System.nanoTime();
+//			ComputationGraph graph = (ComputationGraph) model;
+//            Evaluation evaluation = graph.evaluate(testIter);
+//            diff = System.nanoTime() - start;
+//            logger.info("Evaluation complete in: " + diff / (1000 * 1000) + " ms");
+//            
+//            logger.info(evaluation.stats());
             
             trainIter.reset();
             testIter.reset();
@@ -297,8 +382,10 @@ public class TextCNN {
 	
 	public static void main(String[] args) throws IOException {
 		
-		logger.info("Reading word embedding");
-		WordVectors wordVectors = WordVectorSerializer.loadStaticModel(new File(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb"));
+		logger.info("Reading word embeddings");
+		List<WordVectors> embeddings = new ArrayList<WordVectors>();
+		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.GOOGLE_NEWS_WORD2VEC)));
+		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb")));
 		logger.info("Reading word embedding - complete");
 
 		File dir = new File(DataHelper.PREPROCESSED_DATA_DIR + "/2015-quick");
@@ -311,14 +398,19 @@ public class TextCNN {
 		int epochs = 5;
 		int maxSentenceLength = 50;
 		
-		TextCNN cnn = new TextCNN(channels, outputs, batchSize, epochs, wordVectors, maxSentenceLength);
-		cnn.startUIServer();
-		long start = System.currentTimeMillis();
-		cnn.train(trainFiles, testFiles);
-		long end = System.currentTimeMillis();
-		logger.info("Time taken: " + (end - start));
+		try {
+			TextCNN cnn = new TextCNN(outputs, batchSize, epochs, embeddings, maxSentenceLength);
+			cnn.startUIServer();
+			long start = System.currentTimeMillis();
+			cnn.train(trainFiles, testFiles);
+			long end = System.currentTimeMillis();
+			logger.info("Time taken: " + (end - start));
+		} catch (DL4JInvalidInputException e){
+			e.printStackTrace();
+		} finally {
+			System.exit(-1);
+		}
 		
-		System.exit(0);
 		
 	}
 }
