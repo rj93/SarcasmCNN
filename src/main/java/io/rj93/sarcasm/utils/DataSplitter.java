@@ -1,4 +1,4 @@
-package io.rj93.sarcasm.data;
+package io.rj93.sarcasm.utils;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -16,6 +16,7 @@ import org.deeplearning4j.text.sentenceiterator.SentenceIterator;
 import org.iq80.leveldb.util.FileUtils;
 
 import io.rj93.sarcasm.preprocessing.JSONPreProcessor;
+import scala.collection.generic.BitOperations.Int;
 
 public class DataSplitter {
 	
@@ -83,7 +84,7 @@ public class DataSplitter {
 		} 
 	}
 	
-	private static boolean writeToFile(String filePath, List<String> data, int minSize){
+	private static boolean writeToFile(String filePath, List<String> data, int minSize, int maxSize){
 		boolean success = false;
 		
 		File f = new File(filePath);
@@ -93,7 +94,7 @@ public class DataSplitter {
 		try {
 			writer = new PrintWriter(f);
 			for (String s : data){
-				if (s != null && s.length() >= minSize){
+				if (s != null && s.length() >= minSize && s.length() <= maxSize){
 					writer.println(s);
 				}
 			}
@@ -107,8 +108,8 @@ public class DataSplitter {
 	}
 	
 	public static void main(String[] args){
-		File inputDir = new File(DataHelper.SORTED_DATA_DIR);
-		
+		File inputDir = new File(DataHelper.REDDIT_FILTERED_DIR);
+
 		File[] years = inputDir.listFiles((FileFilter) FileFilterUtils.directoryFileFilter()); // only list directories
 		for (File year : years){
 			for (String Class : new String[]{"pos", "neg"}){
@@ -117,7 +118,7 @@ public class DataSplitter {
 				for (File f : files){
 					List<String> processedStrings = new ArrayList<String>();
 					FileSentenceIterator iter = new FileSentenceIterator(f);
-					iter.setPreProcessor(new JSONPreProcessor());
+					iter.setPreProcessor(new JSONPreProcessor(false, false));
 					while (iter.hasNext()){
 						String s = iter.nextSentence();
 //							System.out.println(s);
@@ -139,8 +140,11 @@ public class DataSplitter {
 					
 					String outDir = DataHelper.PREPROCESSED_DATA_DIR + year.getName() + "/";
 					System.out.println(String.format("train = %f, val = %f, test = %f, dir = %s", trainPer, valPer, testPer, year.getName() + "/" +Class));
-					writeToFile(outDir + "train/" + Class + "/" + f.getName(), train, 2);
-					writeToFile(outDir + "test/" + Class + "/" + f.getName(), test, 2);
+					
+					int minSize = 2;
+					int maxSize = Integer.MAX_VALUE;
+					writeToFile(outDir + "train/" + Class + "/" + f.getName(), train, minSize, maxSize);
+					writeToFile(outDir + "test/" + Class + "/" + f.getName(), test, minSize, maxSize);
 					
 				}
 				

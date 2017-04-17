@@ -23,11 +23,12 @@ import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
+
+import io.rj93.sarcasm.utils.DataHelper;
+
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import io.rj93.sarcasm.data.DataHelper;
 
 public class CnnSentenceMultiDataSetIteratorTest {
 	

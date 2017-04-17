@@ -20,7 +20,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.rj93.sarcasm.data.DataHelper;
+import io.rj93.sarcasm.utils.DataHelper;
 
 public class FilterFromRedditRaw implements Runnable {
 	
