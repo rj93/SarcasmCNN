@@ -90,6 +90,52 @@ public class CnnSentenceMultiDataSetIterator implements MultiDataSetIterator {
         }
         return sentenceProvider.hasNext();
 	}
+	
+	/**
+     * Generally used post training time to load a single sentence for predictions
+     */
+    public INDArray[] loadSingleSentence(String sentence) {
+    	
+        List<List<String>> tokens = new ArrayList<>();
+        
+        int[][] featuresShapes = new int[channels][4];
+        for (int channel = 0; channel < channels; channel++){
+        	tokens.add(tokenizeSentence(wordVectors.get(channel), sentence));
+        	int[] featuresShape = new int[] {1, 1, 0, 0};
+	        if (sentencesAlongHeight) {
+	            featuresShape[2] = Math.min(maxSentenceLength, tokens.get(channel).size());
+	            featuresShape[3] = wordVectorSizes.get(channel);
+	        } else {
+	            featuresShape[2] = wordVectorSizes.get(channel);
+	            featuresShape[3] = Math.min(maxSentenceLength, tokens.size());
+	        }
+	        featuresShapes[channel] = featuresShape;
+        }
+
+        INDArray[] features = new INDArray[channels];
+        for (int channel = 0; channel < channels; channel++){
+        	features[channel] = Nd4j.create(featuresShapes[channel]);
+	        int length = (sentencesAlongHeight ? featuresShapes[channel][2] : featuresShapes[channel][3]);
+	        for (int i = 0; i < length; i++) {
+	            INDArray vector = getVector(wordVectors.get(channel), tokens.get(channel).get(i));
+	
+	            INDArrayIndex[] indices = new INDArrayIndex[4];
+	            indices[0] = NDArrayIndex.point(0);
+	            indices[1] = NDArrayIndex.point(0);
+	            if (sentencesAlongHeight) {
+	                indices[2] = NDArrayIndex.point(i);
+	                indices[3] = NDArrayIndex.all();
+	            } else {
+	                indices[2] = NDArrayIndex.all();
+	                indices[3] = NDArrayIndex.point(i);
+	            }
+	
+	            features[channel].put(indices, vector);
+	        }
+        }
+
+        return features;
+    }
 
 	@Override
 	public MultiDataSet next() {
@@ -129,20 +175,6 @@ public class CnnSentenceMultiDataSetIterator implements MultiDataSetIterator {
 	        }
         }
         
-//        int currMinibatchSize = tokenizedSentences.size();
-//        INDArray[] labels = new INDArray[channels];
-//        for (int channel = 0; channel < channels; channel++){
-//        	labels[channel] = Nd4j.create(currMinibatchSize, numClasses);
-//        	
-//        	for (int i = 0; i < currMinibatchSize; i++){
-//        		String labelString = tokenizedSentences.get(i).getSecond();
-//            	if (!labelClassMap.containsKey(labelString)) 
-//                    throw new IllegalStateException("Got label \"" + labelString + "\" that is not present in list of LabeledSentenceProvider labels");
-//            	
-//            	int labelIdx = labelClassMap.get(labelString);
-//            	labels[channel].putScalar(i, labelIdx, 1.0);
-//        	}
-//        }
         int currMinibatchSize = tokenizedSentences.size();
         INDArray[] labels = {Nd4j.create(currMinibatchSize, numClasses)};
         for (int i = 0; i < tokenizedSentences.size(); i++) {

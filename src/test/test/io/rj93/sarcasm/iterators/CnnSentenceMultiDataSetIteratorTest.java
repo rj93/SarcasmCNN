@@ -58,7 +58,7 @@ public class CnnSentenceMultiDataSetIteratorTest {
 		wordVector2.setUNK("UNK");
 	}
 	
-	@Ignore
+	@Test
 	public void SingleChannelTest(){
 		
 		DataSetIterator dsi = getDataSetIterator(sentences, labels, maxSentenceLength, batchSize, wordVector1);
@@ -78,8 +78,7 @@ public class CnnSentenceMultiDataSetIteratorTest {
 		}
 		
 	}
-	
-	@Ignore
+
 	@Test
 	public void MultiChannelTest(){
 		
@@ -104,6 +103,22 @@ public class CnnSentenceMultiDataSetIteratorTest {
 			assertEquals("Features2", dsf2, mdsf[1]);
 			assertEquals("Labels1", dsl1, mdsl);
 			assertEquals("Labels2", dsl2, mdsl);
+		}
+	}
+	
+	@Test
+	public void loadSingleSentenceTest(){
+		CnnSentenceDataSetIterator dsi1 = (CnnSentenceDataSetIterator) getDataSetIterator(sentences, labels, maxSentenceLength, batchSize, wordVector1);
+		CnnSentenceDataSetIterator dsi2 = (CnnSentenceDataSetIterator) getDataSetIterator(sentences, labels, maxSentenceLength, batchSize, wordVector2);
+		CnnSentenceMultiDataSetIterator mdsi = (CnnSentenceMultiDataSetIterator) getMultiDataSetIterator(sentences, labels, maxSentenceLength, batchSize, wordVector1, wordVector2);
+		
+		for (String s : sentences){
+			INDArray dsf1 = dsi1.loadSingleSentence(s);
+			INDArray dsf2 = dsi2.loadSingleSentence(s);
+			INDArray[] mdsf = mdsi.loadSingleSentence(s);
+			
+			assertEquals("Features1", dsf1, mdsf[0]);
+			assertEquals("Features2", dsf2, mdsf[1]);
 		}
 	}
 	
