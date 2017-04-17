@@ -14,7 +14,7 @@ public class PrettyTime {
 		     .appendMinutes()
 		     .appendSuffix(" minutes ")
 		     .appendSeconds()
-		     .appendSuffix(" seconds ")
+		     .appendSuffix(" seconds")
 		     .toFormatter();
 	
 	public static String prettyNano(long nano){

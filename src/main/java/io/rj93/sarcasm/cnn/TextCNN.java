@@ -453,11 +453,9 @@ public class TextCNN {
 		logger.info("Reading word embeddings");
 		List<WordVectors> embeddings = new ArrayList<WordVectors>();
 		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.GOOGLE_NEWS_WORD2VEC)));
-		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb")));
+//		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb")));
 		logger.info("Reading word embedding - complete");
 
-
-		
 		int outputs = 2; 
 		int batchSize = 32;
 		int epochs = 5;
@@ -468,8 +466,8 @@ public class TextCNN {
 			cnn.startUIServer();
 			long start = System.currentTimeMillis();
 			cnn.train(trainFiles, testFiles);
-			long end = System.currentTimeMillis();
-			logger.info("Time taken: " + (end - start));
+			long diff = System.currentTimeMillis() - start;
+			logger.info("Time taken: " + PrettyTime.prettyNano(diff));
 		} catch (Exception e){
 			e.printStackTrace();
 		} finally {
