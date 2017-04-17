@@ -14,6 +14,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.deeplearning4j.api.storage.StatsStorage;
+import org.deeplearning4j.datasets.iterator.impl.MultiDataSetIteratorAdapter;
 import org.deeplearning4j.earlystopping.EarlyStoppingConfiguration;
 import org.deeplearning4j.earlystopping.EarlyStoppingResult;
 import org.deeplearning4j.earlystopping.saver.LocalFileGraphSaver;
@@ -50,6 +51,7 @@ import org.deeplearning4j.ui.stats.StatsListener;
 import org.deeplearning4j.ui.storage.InMemoryStatsStorage;
 import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.activations.Activation;
+import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
@@ -79,6 +81,8 @@ public class TextCNN {
 	private ComputationGraphConfiguration conf;
 	private ComputationGraph model;
 	private UIServer uiServer = null;
+	private CnnSentenceDataSetIterator singleChannelIter;
+	private CnnSentenceMultiDataSetIterator multiChannelIter;
 	
 	public TextCNN(int nOutputs, int batchSize, int nEpochs, WordVectors embedding, int maxSentenceLength){
 		this(nOutputs, batchSize, nEpochs, Arrays.asList(embedding), maxSentenceLength, 12345);
@@ -114,6 +118,22 @@ public class TextCNN {
 		this.conf = getConf();
 		model = new ComputationGraph(conf);
         model.init();
+        
+        if (nChannels == 1){
+        	singleChannelIter = new CnnSentenceDataSetIterator.Builder()
+                    .wordVectors(embeddings.get(0))
+                    .maxSentenceLength(maxSentenceLength)
+                    .useNormalizedWordVectors(false)
+                    .unknownWordHandling(UnknownWordHandling.UseUnknownVector)
+                    .build();
+        } else {
+        	multiChannelIter = new CnnSentenceMultiDataSetIterator.Builder()
+        			.wordVectors(embeddings)
+        			.maxSentenceLength(maxSentenceLength)
+        			.useNormalizedWordVectors(false)
+        			.unknownWordHandling(UnknownWordHandling.UseUnknownVector.UseUnknownVector)
+        			.build();
+        }
 	}
 	
 
@@ -258,7 +278,7 @@ public class TextCNN {
                 .minibatchSize(batchSize)
                 .maxSentenceLength(maxSentenceLength)
                 .useNormalizedWordVectors(false)
-                .unknownWordHandling(io.rj93.sarcasm.iterators.CnnSentenceMultiDataSetIterator.UnknownWordHandling.UseUnknownVector)
+                .unknownWordHandling(UnknownWordHandling.UseUnknownVector)
                 .build();
 		
 		return iter;
@@ -336,7 +356,7 @@ public class TextCNN {
 		logger.info("Training Complete");
 	}
 	
-	public void trainTest(List<File> trainFiles, List<File> testFiles) throws IOException {
+	public void trainEarlyStopping(List<File> trainFiles, List<File> testFiles) throws IOException {
 		
 		logger.info("trainTest - trainFiles: " + trainFiles.size() + ", testFiles: " + testFiles.size());
 		
@@ -380,7 +400,30 @@ public class TextCNN {
 		return dir;
 	}
 	
+	public void save(File file) throws IOException{
+		save(file, false);
+	}
 	
+	public void save(File file, boolean saveUpdater) throws IOException{
+		ModelSerializer.writeModel(model, file, saveUpdater);
+	}
+	
+	public Prediction predict(String sentence){
+		
+		INDArray result;
+		if (nChannels == 1){
+			INDArray features = singleChannelIter.loadSingleSentence(sentence);
+			result = model.outputSingle(features);
+		} else {
+			INDArray[] features = multiChannelIter.loadSingleSentence(sentence);
+			result = model.outputSingle(features);
+		}
+		
+		return new Prediction(result.getDouble(0), result.getDouble(1));
+	}
+	
+	public void test(List<File> testFiles) throws FileNotFoundException {
+	}
 	
 	public void startUIServer(){
 		uiServer = UIServer.getInstance();
@@ -392,17 +435,6 @@ public class TextCNN {
 	public void stopUIServer(){
 		if  (uiServer != null)
 			uiServer.stop();
-	}
-	
-	public void save(File file) throws IOException{
-		save(file, false);
-	}
-	
-	public void save(File file, boolean saveUpdater) throws IOException{
-		ModelSerializer.writeModel(model, file, saveUpdater);
-	}
-	
-	public void test(List<File> testFiles) throws FileNotFoundException {
 	}
 	
 	public static void main(String[] args) throws IOException {
@@ -434,7 +466,6 @@ public class TextCNN {
 		} finally {
 			System.exit(-1);
 		}
-		
 		
 	}
 }

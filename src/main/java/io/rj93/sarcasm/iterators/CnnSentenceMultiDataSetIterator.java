@@ -10,6 +10,7 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.deeplearning4j.berkeley.Pair;
+import org.deeplearning4j.iterator.CnnSentenceDataSetIterator.UnknownWordHandling;
 import org.deeplearning4j.iterator.LabeledSentenceProvider;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 import org.deeplearning4j.text.tokenization.tokenizer.Tokenizer;
@@ -27,10 +28,6 @@ import org.nd4j.linalg.indexing.NDArrayIndex;
 public class CnnSentenceMultiDataSetIterator implements MultiDataSetIterator {
 	
 	private static final Logger logger = LogManager.getLogger(CnnSentenceMultiDataSetIterator.class);
-	
-	public enum UnknownWordHandling {
-        RemoveWord, UseUnknownVector
-    }
 
     private static final String UNKNOWN_WORD_SENTINEL = "UNKNOWN_WORD_SENTINEL";
 
@@ -49,8 +46,6 @@ public class CnnSentenceMultiDataSetIterator implements MultiDataSetIterator {
     private int numClasses;
     private Map<String, Integer> labelClassMap;
     private INDArray unknown;
-
-    private int cursor = 0;
 	
 	public CnnSentenceMultiDataSetIterator(Builder builder) {
 		this.sentenceProvider = builder.sentenceProvider;
@@ -244,11 +239,10 @@ public class CnnSentenceMultiDataSetIterator implements MultiDataSetIterator {
         	}
         }
 		
+		
         MultiDataSet mds = new MultiDataSet(features, labels, featuresMask, null);
         if (dataSetPreProcessor != null)
         	dataSetPreProcessor.preProcess(mds);
-        
-        cursor += currMinibatchSize;
         
 		return mds;
 	}
@@ -304,7 +298,6 @@ public class CnnSentenceMultiDataSetIterator implements MultiDataSetIterator {
 
 	@Override
 	public void reset() {
-		cursor = 0;
         sentenceProvider.reset();
 	}
 	

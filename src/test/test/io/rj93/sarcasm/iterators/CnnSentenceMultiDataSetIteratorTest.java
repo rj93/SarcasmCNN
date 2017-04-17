@@ -73,6 +73,9 @@ public class CnnSentenceMultiDataSetIteratorTest {
 			INDArray mdsf = mds.getFeatures(0);
 			INDArray mdsl = mds.getLabels(0);
 			
+			System.out.println("dsf: " + dsf);
+			System.out.println("mdsf: " + mdsf);
+			
 			assertEquals("Features", dsf, mdsf);
 			assertEquals("Labels", dsl, mdsl);
 		}
@@ -98,6 +101,9 @@ public class CnnSentenceMultiDataSetIteratorTest {
 			MultiDataSet mds = mdsi.next();
 			INDArray[] mdsf = mds.getFeatures();
 			INDArray mdsl = mds.getLabels(0);
+			
+//			System.out.println("dsf1: " + dsf1);
+//			System.out.println("mdsf[0]: " + mdsf[0]);
 			
 			assertEquals("Features1", dsf1, mdsf[0]);
 			assertEquals("Features2", dsf2, mdsf[1]);
@@ -148,7 +154,7 @@ public class CnnSentenceMultiDataSetIteratorTest {
                 .maxSentenceLength(maxSentenceLength)
                 .minibatchSize(batchSize)
                 .useNormalizedWordVectors(false)
-                .unknownWordHandling(io.rj93.sarcasm.iterators.CnnSentenceMultiDataSetIterator.UnknownWordHandling.UseUnknownVector)
+                .unknownWordHandling(UnknownWordHandling.UseUnknownVector)
                 .build();
 		
 		return iter;
