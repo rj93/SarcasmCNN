@@ -22,7 +22,7 @@ public class PrettyTime {
 	}
 	
 	public static String pretty(long ms){
-		Duration duration = new Duration(123456);
+		Duration duration = new Duration(ms);
 		return formatter.print(duration.toPeriod());
 	}
 	

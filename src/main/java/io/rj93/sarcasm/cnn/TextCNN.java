@@ -154,24 +154,9 @@ public class TextCNN {
 				.learningRate(0.01)
 				.graphBuilder()
 				.addInputs(channelNames)
-				.addLayer("cnn3", new ConvolutionLayer.Builder()
-						.kernelSize(3,vectorSize)
-						.stride(1,vectorSize)
-						.nIn(nChannels)
-						.nOut(cnnLayerFeatureMaps)
-						.build(), channelNames)
-				.addLayer("cnn4", new ConvolutionLayer.Builder()
-						.kernelSize(4,vectorSize)
-						.stride(1,vectorSize)
-						.nIn(nChannels)
-						.nOut(cnnLayerFeatureMaps)
-						.build(), channelNames)
-				.addLayer("cnn5", new ConvolutionLayer.Builder()
-						.kernelSize(5,vectorSize)
-						.stride(1,vectorSize)
-						.nIn(nChannels)
-						.nOut(cnnLayerFeatureMaps)
-						.build(), channelNames)
+				.addLayer("cnn3", getConvolutionLayer(3), channelNames)
+				.addLayer("cnn4", getConvolutionLayer(4), channelNames)
+				.addLayer("cnn5", getConvolutionLayer(5), channelNames)
 				.addVertex("merge", new MergeVertex(), "cnn3", "cnn4", "cnn5")
 				.addLayer("globalPool", new GlobalPoolingLayer.Builder()
 						.poolingType(PoolingType.MAX)
@@ -186,6 +171,15 @@ public class TextCNN {
 				.build();
 		
 		return conf;
+	}
+	
+	private ConvolutionLayer getConvolutionLayer(int noWords){
+		return new ConvolutionLayer.Builder()
+			.kernelSize(noWords,vectorSize)
+			.stride(1,vectorSize)
+			.nIn(nChannels)
+			.nOut(cnnLayerFeatureMaps)
+			.build();
 	}
 	
 	private DataSetIterator getDataSetIterator(List<File> files) throws FileNotFoundException{
@@ -458,7 +452,7 @@ public class TextCNN {
 		
 		logger.info("Reading word embeddings");
 		List<WordVectors> embeddings = new ArrayList<WordVectors>();
-//		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.GOOGLE_NEWS_WORD2VEC)));
+		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.GOOGLE_NEWS_WORD2VEC)));
 		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb")));
 		logger.info("Reading word embedding - complete");
 
@@ -467,7 +461,7 @@ public class TextCNN {
 		int outputs = 2; 
 		int batchSize = 32;
 		int epochs = 5;
-		int maxSentenceLength = 50;
+		int maxSentenceLength = 100;
 		
 		try {
 			TextCNN cnn = new TextCNN(outputs, batchSize, epochs, embeddings, maxSentenceLength);
