@@ -102,9 +102,6 @@ private static final int seed = 100;
 			INDArray[] mdsf = mds.getFeatures();
 			INDArray mdsl = mds.getLabels(0);
 			
-//			System.out.println("dsf1: " + dsf1);
-//			System.out.println("mdsf[0]: " + mdsf[0]);
-			
 			assertEquals("Features1", dsf1, mdsf[0]);
 			assertEquals("Features2", dsf2, mdsf[1]);
 			assertEquals("Labels1", dsl1, mdsl);

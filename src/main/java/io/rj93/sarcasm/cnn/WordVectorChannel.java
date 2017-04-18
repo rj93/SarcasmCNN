@@ -1,6 +1,7 @@
 package io.rj93.sarcasm.cnn;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -46,44 +47,7 @@ public class WordVectorChannel implements Channel {
 	
 	@Override
 	public INDArray getFeatureVector(String sentence) {
-
-		List<String> tokens = tokenizeSentence(sentence);
-		
-		return getFeatureVector(tokens);
-	}
-	
-	@Override
-	public INDArray getFeatureVector(List<String> tokens) {
-		
-		int[] featuresShape = new int[] {1, 1, 0, 0};
-        if (sentencesAlongHeight) {
-            featuresShape[2] = Math.min(maxSentenceLength, tokens.size());
-            featuresShape[3] = size;
-        } else {
-            featuresShape[2] = size;
-            featuresShape[3] = Math.min(maxSentenceLength, tokens.size());
-        }
-
-        INDArray features = Nd4j.create(featuresShape);
-        int length = (sentencesAlongHeight ? featuresShape[2] : featuresShape[3]);
-        for (int i = 0; i < length; i++) {
-            INDArray vector = getVector(tokens.get(i));
-
-            INDArrayIndex[] indices = new INDArrayIndex[4];
-            indices[0] = NDArrayIndex.point(0);
-            indices[1] = NDArrayIndex.point(0);
-            if (sentencesAlongHeight) {
-                indices[2] = NDArrayIndex.point(i);
-                indices[3] = NDArrayIndex.all();
-            } else {
-                indices[2] = NDArrayIndex.all();
-                indices[3] = NDArrayIndex.point(i);
-            }
-
-            features.put(indices, vector);
-        }
-
-        return features;
+		return getFeatureVectors(Arrays.asList(sentence)).getFeatures();
 	}
 	
 	@Override

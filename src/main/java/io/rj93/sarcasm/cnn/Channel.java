@@ -10,8 +10,6 @@ public interface Channel {
 	
 	public INDArray getFeatureVector(String sentence);
 	
-	public INDArray getFeatureVector(List<String> sentences);
-	
 	public MultiResult getFeatureVectors(List<String> sentences);
 	
 }
