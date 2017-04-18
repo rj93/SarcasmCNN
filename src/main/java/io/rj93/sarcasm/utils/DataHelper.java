@@ -21,6 +21,7 @@ import org.apache.commons.io.filefilter.FileFileFilter;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 
 import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
 
 public class DataHelper {
 	
@@ -120,7 +121,7 @@ public class DataHelper {
 		if (train)
 			f = new File(REDDIT_COMP_DIR + "reddit_training.csv");
 		else 
-			f = new File(REDDIT_COMP_DIR + "reddit_test.csv");
+			f = new File(REDDIT_COMP_DIR + "reddit_test_fixed.csv");
 		
 		CSVReader reader = new CSVReader(new FileReader(f));
 	    String [] nextLine;
@@ -131,6 +132,45 @@ public class DataHelper {
 	    }
 	    
 		return data;
+	}
+	
+	/**
+	 * Adds the labels to the test file, as they are originally in two separate files
+	 * @throws IOException
+	 */
+	public static void fixRedditCompTestDataSet() throws IOException{
+		File labeledFile = new File(REDDIT_COMP_DIR + "reddit_test_labels.csv");
+		File testFile = new File(REDDIT_COMP_DIR + "reddit_test.csv");
+		File testFixedFile = new File(REDDIT_COMP_DIR + "reddit_test_fixed.csv");
+		
+		CSVReader reader = new CSVReader(new FileReader(labeledFile));
+		List<String> labels = new ArrayList<String>();
+		String[] nextLine;
+	    while ((nextLine = reader.readNext()) != null) {
+	    	labels.add(nextLine[1]);
+	    }
+	    reader.close();
+	    
+	    reader = new CSVReader(new FileReader(testFile));
+	    PrintWriter writer = new PrintWriter(testFixedFile, "UTF-8");
+	    int count = 0;
+	    while ((nextLine = reader.readNext()) != null) {
+	    	String[] temp = new String[11];
+	    	for (int i = 0; i < 10; i++){
+	    		temp[i] = nextLine[i];
+	    	}
+	    	temp[10] = labels.get(count);
+	    	StringBuilder sb = new StringBuilder();
+	    	for (int j = 0; j < temp.length - 1; j++){
+	    		sb.append(temp[j]);
+	    		sb.append(",");
+	    	}
+	    	sb.append(temp[temp.length - 1]);
+	    	writer.println(sb.toString());
+	    	count++;
+	    }
+	    reader.close();
+	    writer.close();
 	}
 
 }

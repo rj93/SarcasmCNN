@@ -202,6 +202,7 @@ public class TextCNN {
 		
 		MultiDataSetIterator trainIter = getMultiDataSetIterator(trainFiles);
 		MultiDataSetIterator testIter = getMultiDataSetIterator(testFiles);
+		labelsMap = ((CnnSentenceChannelDataSetIterator) testIter).getLabelsMap();
 		
 		logger.info("Training Model...");
 		for (int i = 0; i < nEpochs; i++){
@@ -226,7 +227,8 @@ public class TextCNN {
 		}
 		logger.info("Training Complete");
 		
-		labelsMap = ((CnnSentenceChannelDataSetIterator) testIter).getLabelsMap();
+		String dir = getModelSaveDir();
+		save(dir, "model.bin");
 	}
 	
 	public void trainEarlyStopping(List<File> trainFiles, List<File> testFiles) throws IOException {
@@ -238,6 +240,7 @@ public class TextCNN {
 		
 		MultiDataSetIterator trainIter = getMultiDataSetIterator(trainFiles);
 		MultiDataSetIterator testIter = getMultiDataSetIterator(testFiles);
+		labelsMap = ((CnnSentenceChannelDataSetIterator) testIter).getLabelsMap();
 		
 		EarlyStoppingConfiguration<ComputationGraph> esConf = new EarlyStoppingConfiguration.Builder<ComputationGraph>()
 				.epochTerminationConditions(new MaxEpochsTerminationCondition(30))
@@ -280,7 +283,8 @@ public class TextCNN {
 		save(dir, fileName, false);
 	}
 	
-	public void save(String dir, String fileName, boolean saveUpdater) throws IOException{		
+	public void save(String dir, String fileName, boolean saveUpdater) throws IOException{	
+		new File(dir).mkdirs();
 		String file = FilenameUtils.concat(dir, fileName);
 		ModelSerializer.writeModel(model, file, saveUpdater);
 		writeConfig(dir);
@@ -339,11 +343,11 @@ public class TextCNN {
 		
 		int outputs = 2; 
 		int batchSize = 32;
-		int epochs = 5;
+		int epochs = 1;
 		int maxSentenceLength = 100;
 	
 		List<Channel> channels = new ArrayList<Channel>();
-		channels.add(new WordVectorChannel(DataHelper.GOOGLE_NEWS_WORD2VEC, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
+//		channels.add(new WordVectorChannel(DataHelper.GOOGLE_NEWS_WORD2VEC, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
 		channels.add(new WordVectorChannel(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb", true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
 
 		List<File> trainFiles = getSarcasmFiles(true);
@@ -353,7 +357,7 @@ public class TextCNN {
 			TextCNN cnn = new TextCNN(outputs, batchSize, epochs, channels);
 			cnn.startUIServer();
 			long start = System.currentTimeMillis();
-			cnn.trainEarlyStopping(trainFiles, testFiles);
+			cnn.train(trainFiles, testFiles);
 			long diff = System.currentTimeMillis() - start;
 			logger.info("Time taken: " + PrettyTime.prettyNano(diff));
 		} catch (Exception e){
