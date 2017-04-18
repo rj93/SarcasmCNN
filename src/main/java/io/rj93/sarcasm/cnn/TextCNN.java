@@ -6,11 +6,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
@@ -28,15 +25,12 @@ import org.deeplearning4j.earlystopping.termination.MaxTimeIterationTerminationC
 import org.deeplearning4j.earlystopping.trainer.EarlyStoppingGraphTrainer;
 import org.deeplearning4j.earlystopping.trainer.EarlyStoppingTrainer;
 import org.deeplearning4j.eval.Evaluation;
-import org.deeplearning4j.exception.DL4JInvalidInputException;
 import org.deeplearning4j.iterator.LabeledSentenceProvider;
 import org.deeplearning4j.iterator.CnnSentenceDataSetIterator;
 import org.deeplearning4j.iterator.CnnSentenceDataSetIterator.UnknownWordHandling;
 import org.deeplearning4j.iterator.provider.CollectionLabeledSentenceProvider;
-import org.deeplearning4j.iterator.provider.FileLabeledSentenceProvider;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
-import org.deeplearning4j.models.word2vec.Word2Vec;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.ConvolutionMode;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -62,6 +56,7 @@ import org.springframework.format.datetime.standard.DateTimeContextHolder;
 
 import io.rj93.sarcasm.filters.TestFileFilter;
 import io.rj93.sarcasm.filters.TrainFileFilter;
+import io.rj93.sarcasm.iterators.CnnSentenceChannelDataSetIterator;
 import io.rj93.sarcasm.iterators.CnnSentenceMultiDataSetIterator;
 import io.rj93.sarcasm.utils.DataHelper;
 import io.rj93.sarcasm.utils.PrettyTime;
@@ -78,9 +73,8 @@ public class TextCNN {
 	private int nEpochs;
 	private int iterations = 1;
 	private int seed;
-	private List<WordVectors> embeddings;
+	private List<Channel> channels;
 	private int vectorSize;
-	private int maxSentenceLength;
 	private int cnnLayerFeatureMaps = 100;
 	private ComputationGraphConfiguration conf;
 	private ComputationGraph model;
@@ -88,16 +82,16 @@ public class TextCNN {
 	private CnnSentenceDataSetIterator singleChannelIter;
 	private CnnSentenceMultiDataSetIterator multiChannelIter;
 	
-	public TextCNN(int nOutputs, int batchSize, int nEpochs, WordVectors embedding, int maxSentenceLength){
-		this(nOutputs, batchSize, nEpochs, Arrays.asList(embedding), maxSentenceLength, 12345);
+	public TextCNN(int nOutputs, int batchSize, int nEpochs, Channel channel){
+		this(nOutputs, batchSize, nEpochs, Arrays.asList(channel), 12345);
 	}
 	
-	public TextCNN(int nOutputs, int batchSize, int nEpochs, List<WordVectors> embeddings, int maxSentenceLength){
-		this(nOutputs, batchSize, nEpochs, embeddings, maxSentenceLength, 12345);
+	public TextCNN(int nOutputs, int batchSize, int nEpochs, List<Channel> channels){
+		this(nOutputs, batchSize, nEpochs, channels, 12345);
 	}
 	
-	public TextCNN(int nOutputs, int batchSize, int nEpochs, List<WordVectors> embeddings, int maxSentenceLength, int seed){
-		this.nChannels = embeddings.size();
+	public TextCNN(int nOutputs, int batchSize, int nEpochs, List<Channel> channels, int seed){
+		this.nChannels = channels.size();
 		channelNames = new String[nChannels];
 		for (int i = 0; i < nChannels; i++){
 			channelNames[i] = "input" + i;
@@ -108,16 +102,13 @@ public class TextCNN {
 		this.nEpochs = nEpochs;
 		
 		int vectorSize = 0;
-		for (WordVectors embedding : embeddings){
-			if (embedding.getUNK() == null)
-				embedding.setUNK("UNK");
-			vectorSize += embedding.getWordVector(embedding.vocab().wordAtIndex(0)).length;
+		for (Channel channel : channels){
+			vectorSize += channel.getSize();
 		}
-		this.embeddings = embeddings;
+		this.channels = channels;
 		this.vectorSize = vectorSize;
 		logger.info("Vector total size: " + vectorSize);
 		
-		this.maxSentenceLength = maxSentenceLength;
 		this.seed = seed;
 		this.conf = getConf();
 		model = new ComputationGraph(conf);
@@ -182,71 +173,6 @@ public class TextCNN {
 			.build();
 	}
 	
-	private DataSetIterator getDataSetIterator(List<File> files) throws FileNotFoundException{
-		
-		LabeledSentenceProvider sentenceProvider;
-		if (files.size() < 1000){
-			List<String> sentences = new ArrayList<String>();
-			List<String> labels = new ArrayList<String>();
-			int posCount = 0;
-			int negCount = 0;
-			for (File f : files){
-				
-				List<String> s;
-				try {
-					s = FileUtils.readLines(f, "UTF-8");
-					sentences.addAll(s);
-					
-					String label;
-					if (f.getAbsolutePath().contains("pos")){
-						label = "positive";
-						posCount += s.size();
-					} else {
-						label = "negative";
-						negCount += s.size();
-					}
-					for (int i = 0; i < s.size(); i++){
-						labels.add(label);
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			logger.info("No. positive: " + posCount + ", No. negative: " + negCount);
-			sentenceProvider = new CollectionLabeledSentenceProvider(sentences, labels, new Random(seed));
-		} else {
-			
-			List<File> posFiles = new ArrayList<>();
-			List<File> negFiles = new ArrayList<>();
-			
-			for (File f : files){
-				if (f.getAbsolutePath().contains("pos")){
-					posFiles.add(f);
-				} else {
-					negFiles.add(f);
-				}
-			}
-			logger.info("No. positive: " + posFiles.size() + ", No. negative: " + negFiles.size());
-			
-			Map<String,List<File>> map = new HashMap<>();
-			map.put("positive", posFiles);
-			map.put("negative", negFiles);
-			
-			sentenceProvider = new FileLabeledSentenceProvider(map, new Random(seed));
-		}
-		
-		
-		DataSetIterator iter = new CnnSentenceDataSetIterator.Builder()
-        		.sentenceProvider(sentenceProvider)
-                .wordVectors(embeddings.get(0))
-                .minibatchSize(batchSize)
-                .maxSentenceLength(maxSentenceLength)
-                .useNormalizedWordVectors(false)
-                .unknownWordHandling(UnknownWordHandling.UseUnknownVector)
-                .build();
-        return iter;
-    }
-	
 	private MultiDataSetIterator getMultiDataSetIterator(List<File> files) throws FileNotFoundException {
 		
 		List<String> sentences = new ArrayList<String>();
@@ -279,13 +205,10 @@ public class TextCNN {
 		logger.info("No. positive: " + posCount + ", No. negative: " + negCount);
 		LabeledSentenceProvider sentenceProvider = new CollectionLabeledSentenceProvider(sentences, labels, new Random(seed));
 		
-		MultiDataSetIterator iter = new CnnSentenceMultiDataSetIterator.Builder()
+		MultiDataSetIterator iter = new CnnSentenceChannelDataSetIterator.Builder()
         		.sentenceProvider(sentenceProvider)
-                .wordVectors(embeddings)
+                .wordVectors(channels)
                 .minibatchSize(batchSize)
-                .maxSentenceLength(maxSentenceLength)
-                .useNormalizedWordVectors(false)
-                .unknownWordHandling(UnknownWordHandling.UseUnknownVector)
                 .build();
 		
 		return iter;
@@ -294,47 +217,6 @@ public class TextCNN {
 	public void train(List<File> trainFiles, List<File> testFiles) throws IOException {
 		
 		logger.info("train - trainFiles: " + trainFiles.size() + ", testFiles: " + testFiles.size());
-		
-		if (embeddings.size() == 1){
-			trainSingleChannel(trainFiles, testFiles);
-		} else {
-			trainMultiChannel(trainFiles, testFiles);
-		}
-	}
-	
-	private void trainSingleChannel(List<File> trainFiles, List<File> testFiles) throws IOException {
-		
-		logger.info("trainSingleChannel");
-		
-		DataSetIterator trainIter = getDataSetIterator(trainFiles);
-		DataSetIterator testIter = getDataSetIterator(testFiles);
-		
-		logger.info("Training Model...");
-		for (int i = 0; i < nEpochs; i++){
-			
-			
-			logger.info("Starting epoch " + i + "... ");
-			long start = System.nanoTime();
-			model.fit(trainIter);
-			long diff = System.nanoTime() - start;
-			logger.info("Epoch " + i + " complete in " + PrettyTime.prettyNano(diff) + ". Starting evaluation...");
-			
-			start = System.nanoTime();
-            Evaluation evaluation = model.evaluate(testIter);
-            diff = System.nanoTime() - start;
-            logger.info("Evaluation complete in: " + PrettyTime.prettyNano(diff));
-            
-            logger.info(evaluation.stats());
-            
-            trainIter.reset();
-            testIter.reset();
-		}
-		logger.info("Training Complete");
-	}
-	
-	private void trainMultiChannel(List<File> trainFiles, List<File> testFiles) throws IOException {
-		
-		logger.info("trainMultiChannel");
 		
 		MultiDataSetIterator trainIter = getMultiDataSetIterator(trainFiles);
 		MultiDataSetIterator testIter = getMultiDataSetIterator(testFiles);
@@ -363,44 +245,44 @@ public class TextCNN {
 		logger.info("Training Complete");
 	}
 	
-	public void trainEarlyStopping(List<File> trainFiles, List<File> testFiles) throws IOException {
-		
-		logger.info("trainTest - trainFiles: " + trainFiles.size() + ", testFiles: " + testFiles.size());
-		
-		String dir = getModelDir();
-		new File(dir).mkdirs();
-		
-		DataSetIterator trainIter = getDataSetIterator(trainFiles);
-		DataSetIterator testIter = getDataSetIterator(testFiles);
-		
-		EarlyStoppingConfiguration<ComputationGraph> esConf = new EarlyStoppingConfiguration.Builder<ComputationGraph>()
-				.epochTerminationConditions(new MaxEpochsTerminationCondition(30))
-				.iterationTerminationConditions(new MaxTimeIterationTerminationCondition(30, TimeUnit.MINUTES))
-				.scoreCalculator(new DataSetLossCalculatorCG(testIter, true))
-		        .evaluateEveryNEpochs(1)
-				.modelSaver(new LocalFileGraphSaver(dir))
-				.build();
-
-		EarlyStoppingGraphTrainer trainer = new EarlyStoppingGraphTrainer(esConf, model, trainIter);
-		
-		EarlyStoppingResult<ComputationGraph> result = trainer.fit();
-		
-		logger.info("Termination reason: " + result.getTerminationReason());
-		logger.info("Termination details: " + result.getTerminationDetails());
-		logger.info("Total epochs: " + result.getTotalEpochs());
-		logger.info("Best epoch number: " + result.getBestModelEpoch());
-		logger.info("Score at best epoch: " + result.getBestModelScore());
-		
-		ComputationGraph bestModel = result.getBestModel();
-		testIter.reset();
-		
-		long start = System.nanoTime();
-        Evaluation evaluation = bestModel.evaluate(testIter);
-        long diff = System.nanoTime() - start;
-        logger.info("complete in: " + PrettyTime.prettyNano(diff));
-        
-        logger.info(evaluation.stats());
-	}
+//	public void trainEarlyStopping(List<File> trainFiles, List<File> testFiles) throws IOException {
+//		
+//		logger.info("trainTest - trainFiles: " + trainFiles.size() + ", testFiles: " + testFiles.size());
+//		
+//		String dir = getModelDir();
+//		new File(dir).mkdirs();
+//		
+//		DataSetIterator trainIter = getDataSetIterator(trainFiles);
+//		DataSetIterator testIter = getDataSetIterator(testFiles);
+//		
+//		EarlyStoppingConfiguration<ComputationGraph> esConf = new EarlyStoppingConfiguration.Builder<ComputationGraph>()
+//				.epochTerminationConditions(new MaxEpochsTerminationCondition(30))
+//				.iterationTerminationConditions(new MaxTimeIterationTerminationCondition(30, TimeUnit.MINUTES))
+//				.scoreCalculator(new DataSetLossCalculatorCG(testIter, true))
+//		        .evaluateEveryNEpochs(1)
+//				.modelSaver(new LocalFileGraphSaver(dir))
+//				.build();
+//
+//		EarlyStoppingGraphTrainer trainer = new EarlyStoppingGraphTrainer(esConf, model, trainIter);
+//		
+//		EarlyStoppingResult<ComputationGraph> result = trainer.fit();
+//		
+//		logger.info("Termination reason: " + result.getTerminationReason());
+//		logger.info("Termination details: " + result.getTerminationDetails());
+//		logger.info("Total epochs: " + result.getTotalEpochs());
+//		logger.info("Best epoch number: " + result.getBestModelEpoch());
+//		logger.info("Score at best epoch: " + result.getBestModelScore());
+//		
+//		ComputationGraph bestModel = result.getBestModel();
+//		testIter.reset();
+//		
+//		long start = System.nanoTime();
+//        Evaluation evaluation = bestModel.evaluate(testIter);
+//        long diff = System.nanoTime() - start;
+//        logger.info("complete in: " + PrettyTime.prettyNano(diff));
+//        
+//        logger.info(evaluation.stats());
+//	}
 	
 	private static String getModelDir(){
 		String dir = DataHelper.MODELS_DIR + dateFormat.format(System.currentTimeMillis()) + "/";
@@ -447,22 +329,28 @@ public class TextCNN {
 	
 	public static void main(String[] args) throws IOException {
 		
-		List<File> trainFiles = getSarcasmFiles(true);
-		List<File> testFiles = getSarcasmFiles(false);
-		
-		logger.info("Reading word embeddings");
-		List<WordVectors> embeddings = new ArrayList<WordVectors>();
-		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.GOOGLE_NEWS_WORD2VEC)));
-//		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb")));
-		logger.info("Reading word embedding - complete");
-
 		int outputs = 2; 
 		int batchSize = 32;
 		int epochs = 5;
 		int maxSentenceLength = 100;
 		
+		
+		logger.info("Reading word embeddings");
+		List<WordVectors> embeddings = new ArrayList<WordVectors>();
+		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.GOOGLE_NEWS_WORD2VEC)));
+		embeddings.add(WordVectorSerializer.loadStaticModel(new File(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb")));
+		
+		List<Channel> channels = new ArrayList<Channel>();
+		for(WordVectors wordVector : embeddings){
+			channels.add(new WordVectorChannel(wordVector, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
+		}
+		logger.info("Reading word embedding - complete");
+
+		List<File> trainFiles = getSarcasmFiles(true);
+		List<File> testFiles = getSarcasmFiles(false);
+		
 		try {
-			TextCNN cnn = new TextCNN(outputs, batchSize, epochs, embeddings, maxSentenceLength);
+			TextCNN cnn = new TextCNN(outputs, batchSize, epochs, channels);
 			cnn.startUIServer();
 			long start = System.currentTimeMillis();
 			cnn.train(trainFiles, testFiles);
