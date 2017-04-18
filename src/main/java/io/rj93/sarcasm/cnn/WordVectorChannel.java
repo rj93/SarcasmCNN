@@ -1,5 +1,6 @@
 package io.rj93.sarcasm.cnn;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.deeplearning4j.iterator.CnnSentenceDataSetIterator.UnknownWordHandling;
+import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 import org.deeplearning4j.text.tokenization.tokenizer.Tokenizer;
 import org.deeplearning4j.text.tokenization.tokenizerfactory.DefaultTokenizerFactory;
@@ -22,6 +24,7 @@ public class WordVectorChannel implements Channel {
 	
 	private static final String UNKNOWN_WORD_SENTINEL = "UNKNOWN_WORD_SENTINEL";
 	
+	private final File wordVectorFile;
 	private final WordVectors wordVector;
 	private final boolean useNormalizedWordVectors;
 	private final UnknownWordHandling unknownWordHandling;
@@ -31,14 +34,24 @@ public class WordVectorChannel implements Channel {
 	private TokenizerFactory tokenizerFactory = new DefaultTokenizerFactory();
 	private INDArray unknown;
 	
-	public WordVectorChannel(WordVectors wordVector, boolean useNormalizedWordVectors, UnknownWordHandling unknownWordHandling, int maxSentenceLength){
-		this.wordVector = wordVector;
+	public WordVectorChannel(String wordVectorPath, boolean useNormalizedWordVectors, UnknownWordHandling unknownWordHandling, int maxSentenceLength){
+		this(new File(wordVectorPath), useNormalizedWordVectors, unknownWordHandling, maxSentenceLength);
+	}
+	
+	public WordVectorChannel(File wordVectorFile, boolean useNormalizedWordVectors, UnknownWordHandling unknownWordHandling, int maxSentenceLength){
+		this.wordVectorFile = wordVectorFile;
+		this.wordVector = readWordVector(wordVectorFile);
 		size = wordVector.getWordVector(wordVector.vocab().wordAtIndex(0)).length;
 		this.useNormalizedWordVectors = useNormalizedWordVectors;
 		this.unknownWordHandling = unknownWordHandling;
 		this.maxSentenceLength = maxSentenceLength;
 	}
 
+	private WordVectors readWordVector(File file){
+		logger.info("Reading word vector: " + file.getAbsolutePath());
+		return WordVectorSerializer.loadStaticModel(file);
+	}
+	
 	@Override
 	public int getSize() {
 		return size;
@@ -157,5 +170,8 @@ public class WordVectorChannel implements Channel {
         return tokens;
     }
 	
-
+	@Override
+	public String toString(){
+		return "WordVectorChannel(File: " + wordVectorFile.getAbsolutePath() + ")";
+	}
 }

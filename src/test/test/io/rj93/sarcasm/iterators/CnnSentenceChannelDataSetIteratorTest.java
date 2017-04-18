@@ -57,8 +57,8 @@ private static final int seed = 100;
 		wordVector2 = WordVectorSerializer.loadStaticModel(new File(DataHelper.GLOVE_MEDIUM));
 		wordVector2.setUNK("UNK");
 		
-		channel1 = new WordVectorChannel(wordVector1, false, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
-		channel2 = new WordVectorChannel(wordVector2, false, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
+		channel1 = new WordVectorChannel(DataHelper.GLOVE_SMALL, false, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
+		channel2 = new WordVectorChannel(DataHelper.GLOVE_MEDIUM, false, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
 	}
 	
 	@Test
