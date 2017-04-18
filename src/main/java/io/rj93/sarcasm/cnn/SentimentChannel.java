@@ -6,10 +6,11 @@ import java.util.List;
 import org.deeplearning4j.text.tokenization.tokenizer.Tokenizer;
 import org.deeplearning4j.text.tokenization.tokenizerfactory.DefaultTokenizerFactory;
 import org.deeplearning4j.text.tokenization.tokenizerfactory.TokenizerFactory;
+import org.json.JSONObject;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
-public class SentimentChannel implements Channel {
+public class SentimentChannel extends Channel {
 	
 	private int nParts;
 	private TokenizerFactory tokenizerFactory = new DefaultTokenizerFactory();
@@ -90,7 +91,5 @@ public class SentimentChannel implements Channel {
         }
 		return tokens;
 	}
-	
-	
 
 }

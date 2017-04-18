@@ -47,6 +47,7 @@ import org.deeplearning4j.ui.api.UIServer;
 import org.deeplearning4j.ui.stats.StatsListener;
 import org.deeplearning4j.ui.storage.InMemoryStatsStorage;
 import org.deeplearning4j.util.ModelSerializer;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -298,9 +299,9 @@ public class TextCNN {
 			labels.put(entry.getKey(), entry.getValue());
 		}
 		
-		JSONObject channels = new JSONObject();
+		JSONArray channels = new JSONArray();
 		for (int channel = 0; channel < nChannels; channel++){
-			channels.append(String.valueOf(channel), this.channels.get(channel).toString());
+			channels.put(this.channels.get(channel).toString());
 		}
 		
 		JSONObject configJson = new JSONObject();
@@ -309,6 +310,13 @@ public class TextCNN {
 		PrintWriter writer = new PrintWriter(file, "UTF-8");
 		writer.println(configJson.toString(4));
 		writer.close();
+	}
+	
+	public static TextCNN loadFromDir(String dir){
+		
+		
+		
+		return null;
 	}
 	
 	public Prediction predict(String sentence){
@@ -349,7 +357,10 @@ public class TextCNN {
 		List<Channel> channels = new ArrayList<Channel>();
 //		channels.add(new WordVectorChannel(DataHelper.GOOGLE_NEWS_WORD2VEC, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
 		channels.add(new WordVectorChannel(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb", true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
-
+		
+		for (Channel c : channels){
+			System.out.println(c.toString());
+		}
 		List<File> trainFiles = getSarcasmFiles(true);
 		List<File> testFiles = getSarcasmFiles(false);
 		
@@ -390,7 +401,6 @@ public class TextCNN {
 		}
 		return files;
 	}
-	
 	
 	private static List<File> getSarcasmFiles(boolean training) throws FileNotFoundException{
 		logger.info("using sarcastic files");

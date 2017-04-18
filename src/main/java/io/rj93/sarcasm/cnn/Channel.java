@@ -2,14 +2,22 @@ package io.rj93.sarcasm.cnn;
 
 import java.util.List;
 
+import org.json.JSONObject;
 import org.nd4j.linalg.api.ndarray.INDArray;
 
-public interface Channel {
+public abstract class Channel {
 	
-	public int getSize();
+	public abstract int getSize();
 	
-	public INDArray getFeatureVector(String sentence);
+	public abstract INDArray getFeatureVector(String sentence);
 	
-	public MultiResult getFeatureVectors(List<String> sentences);
+	public abstract MultiResult getFeatureVectors(List<String> sentences);
 	
+		String type = config.getString("type");
+		
+		if (type.equals(WordVectorChannel.TYPE)){
+		}
+		
+		return null;
+	}
 }
