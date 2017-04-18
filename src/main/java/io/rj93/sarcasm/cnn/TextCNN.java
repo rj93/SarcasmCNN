@@ -8,6 +8,8 @@ import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -109,11 +111,16 @@ public class TextCNN {
 		
 		this.seed = seed;
 		this.conf = getConf();
-		model = new ComputationGraph(conf);
-        model.init();
-        
+		this.model = new ComputationGraph(conf);
+        this.model.init();
 	}
-	
+
+	public TextCNN(ComputationGraph model, List<Channel> channels, Map<String, Integer> labels, int seed) {
+		this.model = model;
+		this.channels = channels;
+		this.labelsMap = labels;
+		this.seed = seed;
+	}
 
 	private ComputationGraphConfiguration getConf(){
 		
@@ -307,16 +314,50 @@ public class TextCNN {
 		JSONObject configJson = new JSONObject();
 		configJson.put("labels", labels);
 		configJson.put("channels", channels);
+		configJson.put("seed", seed);
 		PrintWriter writer = new PrintWriter(file, "UTF-8");
 		writer.println(configJson.toString(4));
 		writer.close();
 	}
 	
-	public static TextCNN loadFromDir(String dir){
+	@SuppressWarnings("rawtypes")
+	public static TextCNN loadFromDir(String dir, String fileName) throws IOException{
+			
+		JSONObject config = loadConfig(dir);
+		int nOutputs = config.getInt("nOutputs");
+		int seed = config.getInt("seed");
 		
+		List<Channel> channels = new ArrayList<Channel>();
+		JSONArray channelsArray = config.getJSONArray("channels");
+		for (int i = 0; i < channelsArray.length(); i++){
+			channels.add(Channel.loadFromConfig(channelsArray.getJSONObject(i)));
+		}
 		
+		Map<String, Integer> labels = new HashMap<String, Integer>();
+		JSONObject labelObj = config.getJSONObject("labels");
+		Iterator keysIter = labelObj.keys();
+		while(keysIter.hasNext()){
+			String key = (String) keysIter.next();
+			int value = labelObj.getInt(key);
+			labels.put(key, value);
+		}
 		
-		return null;
+		String modelPath = FilenameUtils.concat(dir, fileName);
+		ComputationGraph model = ModelSerializer.restoreComputationGraph(modelPath);
+		
+		return new TextCNN(model, channels, labels, seed);
+	}
+	
+	private static JSONObject loadConfig(String dir) throws IOException{
+		String confFilePath = FilenameUtils.concat(dir, "config.json");
+		
+		List<String> lines = FileUtils.readLines(new File(confFilePath));
+		StringBuilder sb = new StringBuilder();
+		for (String line : lines){
+			sb.append(line);
+		}
+		
+		return new JSONObject(sb.toString());
 	}
 	
 	public Prediction predict(String sentence){
@@ -367,10 +408,10 @@ public class TextCNN {
 		try {
 			TextCNN cnn = new TextCNN(outputs, batchSize, epochs, channels);
 			cnn.startUIServer();
-			long start = System.currentTimeMillis();
+			long start = System.nanoTime();
 			cnn.train(trainFiles, testFiles);
-			long diff = System.currentTimeMillis() - start;
-			logger.info("Time taken: " + PrettyTime.prettyNano(diff));
+			long diff = System.nanoTime() - start;
+			logger.info("Total time taken: " + PrettyTime.prettyNano(diff));
 		} catch (Exception e){
 			e.printStackTrace();
 		} finally {

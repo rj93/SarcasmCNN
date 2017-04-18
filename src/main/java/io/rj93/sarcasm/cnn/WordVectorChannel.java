@@ -13,15 +13,17 @@ import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 import org.deeplearning4j.text.tokenization.tokenizer.Tokenizer;
 import org.deeplearning4j.text.tokenization.tokenizerfactory.DefaultTokenizerFactory;
 import org.deeplearning4j.text.tokenization.tokenizerfactory.TokenizerFactory;
+import org.json.JSONObject;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.indexing.INDArrayIndex;
 import org.nd4j.linalg.indexing.NDArrayIndex;
 
-public class WordVectorChannel implements Channel {
+public class WordVectorChannel extends Channel {
 	
 	Logger logger = LogManager.getLogger(WordVectorChannel.class);
 	
+	public static final String TYPE = "WordVectorChannel";
 	private static final String UNKNOWN_WORD_SENTINEL = "UNKNOWN_WORD_SENTINEL";
 	
 	private final File wordVectorFile;
@@ -172,6 +174,30 @@ public class WordVectorChannel implements Channel {
 	
 	@Override
 	public String toString(){
-		return "WordVectorChannel(File: " + wordVectorFile.getAbsolutePath() + ")";
+		JSONObject json = new JSONObject();
+		
+		json.put("type", TYPE);
+		json.put("file", wordVectorFile.getAbsolutePath());
+		json.put("maxSentenceLength", maxSentenceLength);
+		json.put("useNormalizedWordVectors", useNormalizedWordVectors);
+		json.put("unknownWordHandling", unknownWordHandling);
+		
+		return json.toString();
 	}
+
+	public static Channel loadFromConfig(JSONObject config) {
+
+		String path = config.getString("file");
+		int maxSentenceLength = config.getInt("maxSentenceLength");
+		boolean useNormalizedWordVectors = config.getBoolean("useNormalizedWordVectors");
+		UnknownWordHandling unknownWordHandling;
+		if (config.get("").equals("UseUnknownVector")){
+			unknownWordHandling = UnknownWordHandling.UseUnknownVector;
+		} else {
+			unknownWordHandling = UnknownWordHandling.RemoveWord;
+		}
+		
+		return new WordVectorChannel(path, useNormalizedWordVectors, unknownWordHandling, maxSentenceLength);
+	}
+
 }

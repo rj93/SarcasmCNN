@@ -13,9 +13,11 @@ public abstract class Channel {
 	
 	public abstract MultiResult getFeatureVectors(List<String> sentences);
 	
+	public static Channel loadFromConfig(JSONObject config){
 		String type = config.getString("type");
 		
 		if (type.equals(WordVectorChannel.TYPE)){
+			return WordVectorChannel.loadFromConfig(config);
 		}
 		
 		return null;
