@@ -31,8 +31,8 @@ import io.rj93.sarcasm.utils.DataHelper;
 public class CnnSentenceChannelDataSetIteratorTest {
 private static final int seed = 100;
 	
-	static int maxSentenceLength = 10;
-	int batchSize = 32;
+	private static int maxSentenceLength = 10;
+	private int batchSize = 32;
 	
 	private static List<String> sentences = new ArrayList<>();
 	private static List<String> labels = new ArrayList<>();
@@ -65,7 +65,7 @@ private static final int seed = 100;
 	public void SingleChannelTest(){
 		
 		DataSetIterator dsi = getDataSetIterator(sentences, labels, maxSentenceLength, batchSize, wordVector1);
-		MultiDataSetIterator mdsi = getMultiDataSetIterator(sentences, labels, maxSentenceLength, batchSize, channel1);
+		MultiDataSetIterator mdsi = getMultiDataSetIterator(sentences, labels, batchSize, channel1);
 		
 		while(dsi.hasNext() && mdsi.hasNext()){
 			DataSet ds = dsi.next();
@@ -87,7 +87,7 @@ private static final int seed = 100;
 		
 		DataSetIterator dsi1 = getDataSetIterator(sentences, labels, maxSentenceLength, batchSize, wordVector1);
 		DataSetIterator dsi2 = getDataSetIterator(sentences, labels, maxSentenceLength, batchSize, wordVector2);
-		MultiDataSetIterator mdsi = getMultiDataSetIterator(sentences, labels, maxSentenceLength, batchSize, channel1, channel2);
+		MultiDataSetIterator mdsi = getMultiDataSetIterator(sentences, labels, batchSize, channel1, channel2);
 		
 		while(dsi1.hasNext() && dsi2.hasNext() && mdsi.hasNext()){
 			DataSet ds1 = dsi1.next();
@@ -113,7 +113,7 @@ private static final int seed = 100;
 	public void loadSingleSentenceTest(){
 		CnnSentenceDataSetIterator dsi1 = (CnnSentenceDataSetIterator) getDataSetIterator(sentences, labels, maxSentenceLength, batchSize, wordVector1);
 		CnnSentenceDataSetIterator dsi2 = (CnnSentenceDataSetIterator) getDataSetIterator(sentences, labels, maxSentenceLength, batchSize, wordVector2);
-		CnnSentenceChannelDataSetIterator mdsi = (CnnSentenceChannelDataSetIterator) getMultiDataSetIterator(sentences, labels, maxSentenceLength, batchSize, channel1, channel2);
+		CnnSentenceChannelDataSetIterator mdsi = (CnnSentenceChannelDataSetIterator) getMultiDataSetIterator(sentences, labels, batchSize, channel1, channel2);
 		
 		for (String s : sentences){
 			
@@ -142,17 +142,14 @@ private static final int seed = 100;
 		return iter;
 	}
 	
-	private static MultiDataSetIterator getMultiDataSetIterator(List<String> sentences, List<String> labels, int maxSentenceLength, int batchSize, Channel... channels){
+	private static MultiDataSetIterator getMultiDataSetIterator(List<String> sentences, List<String> labels, int batchSize, Channel... channels){
 		
 		LabeledSentenceProvider sentenceProvider = new CollectionLabeledSentenceProvider(sentences, labels, new Random(seed));
 		
 		MultiDataSetIterator iter = new CnnSentenceChannelDataSetIterator.Builder()
 				.sentenceProvider(sentenceProvider)
                 .wordVectors(Arrays.asList(channels))
-                .maxSentenceLength(maxSentenceLength)
                 .minibatchSize(batchSize)
-                .useNormalizedWordVectors(false)
-                .unknownWordHandling(UnknownWordHandling.UseUnknownVector)
                 .build();
 		
 		return iter;

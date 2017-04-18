@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.deeplearning4j.berkeley.Pair;
 import org.deeplearning4j.iterator.CnnSentenceDataSetIterator.UnknownWordHandling;
 import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 import org.deeplearning4j.text.tokenization.tokenizer.Tokenizer;
@@ -77,23 +76,28 @@ public class WordVectorChannel implements Channel {
             featuresShape[2] = size;
             featuresShape[3] = maxLength;
         }
-
+        
+        
+        INDArrayIndex[] indices = new INDArrayIndex[4];
+        indices[1] = NDArrayIndex.point(0);
+        if (sentencesAlongHeight) {
+            indices[3] = NDArrayIndex.all();
+        } else {
+            indices[2] = NDArrayIndex.all();
+        }
+        
         INDArray features = Nd4j.create(featuresShape);
         for (int i = 0; i < sentences.size(); i++) {
+        	
             List<String> currSentence = tokenizedSentences.get(i);
-
+            indices[0] = NDArrayIndex.point(i);
+            
             for (int j = 0; j < currSentence.size() && j < maxSentenceLength; j++) {
                 INDArray vector = getVector(currSentence.get(j));
 
-                INDArrayIndex[] indices = new INDArrayIndex[4];
-                //TODO REUSE
-                indices[0] = NDArrayIndex.point(i);
-                indices[1] = NDArrayIndex.point(0);
                 if (sentencesAlongHeight) {
                     indices[2] = NDArrayIndex.point(j);
-                    indices[3] = NDArrayIndex.all();
                 } else {
-                    indices[2] = NDArrayIndex.all();
                     indices[3] = NDArrayIndex.point(j);
                 }
 
