@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
@@ -26,7 +27,6 @@ import org.deeplearning4j.earlystopping.trainer.EarlyStoppingGraphTrainer;
 import org.deeplearning4j.earlystopping.trainer.EarlyStoppingTrainer;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.iterator.LabeledSentenceProvider;
-import org.deeplearning4j.iterator.CnnSentenceDataSetIterator;
 import org.deeplearning4j.iterator.CnnSentenceDataSetIterator.UnknownWordHandling;
 import org.deeplearning4j.iterator.provider.CollectionLabeledSentenceProvider;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
@@ -41,7 +41,6 @@ import org.deeplearning4j.nn.conf.layers.GlobalPoolingLayer;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.conf.layers.PoolingType;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.ui.api.UIServer;
 import org.deeplearning4j.ui.stats.StatsListener;
@@ -49,15 +48,12 @@ import org.deeplearning4j.ui.storage.InMemoryStatsStorage;
 import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
-import org.springframework.format.datetime.standard.DateTimeContextHolder;
 
 import io.rj93.sarcasm.filters.TestFileFilter;
 import io.rj93.sarcasm.filters.TrainFileFilter;
 import io.rj93.sarcasm.iterators.CnnSentenceChannelDataSetIterator;
-import io.rj93.sarcasm.iterators.CnnSentenceMultiDataSetIterator;
 import io.rj93.sarcasm.utils.DataHelper;
 import io.rj93.sarcasm.utils.PrettyTime;
 
@@ -79,8 +75,7 @@ public class TextCNN {
 	private ComputationGraphConfiguration conf;
 	private ComputationGraph model;
 	private UIServer uiServer = null;
-	private CnnSentenceDataSetIterator singleChannelIter;
-	private CnnSentenceMultiDataSetIterator multiChannelIter;
+	private Map<String, Integer> labelsMap;
 	
 	public TextCNN(int nOutputs, int batchSize, int nEpochs, Channel channel){
 		this(nOutputs, batchSize, nEpochs, Arrays.asList(channel), 12345);
@@ -114,21 +109,6 @@ public class TextCNN {
 		model = new ComputationGraph(conf);
         model.init();
         
-//        if (nChannels == 1){
-//        	singleChannelIter = new CnnSentenceDataSetIterator.Builder()
-//                    .wordVectors(embeddings.get(0))
-//                    .maxSentenceLength(maxSentenceLength)
-//                    .useNormalizedWordVectors(false)
-//                    .unknownWordHandling(UnknownWordHandling.UseUnknownVector)
-//                    .build();
-//        } else {
-//        	multiChannelIter = new CnnSentenceMultiDataSetIterator.Builder()
-//        			.wordVectors(embeddings)
-//        			.maxSentenceLength(maxSentenceLength)
-//        			.useNormalizedWordVectors(false)
-//        			.unknownWordHandling(UnknownWordHandling.UseUnknownVector.UseUnknownVector)
-//        			.build();
-//        }
 	}
 	
 
@@ -243,6 +223,8 @@ public class TextCNN {
             testIter.reset();
 		}
 		logger.info("Training Complete");
+		
+		labelsMap = ((CnnSentenceChannelDataSetIterator) testIter).getLabelsMap();
 	}
 	
 //	public void trainEarlyStopping(List<File> trainFiles, List<File> testFiles) throws IOException {
@@ -299,16 +281,14 @@ public class TextCNN {
 	
 	public Prediction predict(String sentence){
 		
-		INDArray result;
-		if (nChannels == 1){
-			INDArray features = singleChannelIter.loadSingleSentence(sentence);
-			result = model.outputSingle(features);
-		} else {
-			INDArray[] features = multiChannelIter.loadSingleSentence(sentence);
-			result = model.outputSingle(features);
+		INDArray[] features = new INDArray[nChannels];
+		for (int channel = 0; channel < nChannels; channel++){
+			features[channel] = channels.get(channel).getFeatureVector(sentence);
 		}
+		INDArray result = model.outputSingle(features);
 		
-		return new Prediction(result.getDouble(0), result.getDouble(1));
+		return new Prediction(result.getDouble(labelsMap.get("positive")), result.getDouble(labelsMap.get("negative") ));
+		
 	}
 	
 	public void test(List<File> testFiles) throws FileNotFoundException {

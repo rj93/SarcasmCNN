@@ -144,6 +144,10 @@ public class CnnSentenceChannelDataSetIterator implements MultiDataSetIterator {
         sentenceProvider.reset();
 	}
 	
+	public Map<String, Integer> getLabelsMap(){
+		return labelClassMap;
+	}
+	
 	public static class Builder {
 		
 		private LabeledSentenceProvider sentenceProvider = null;
