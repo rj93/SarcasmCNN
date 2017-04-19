@@ -16,8 +16,8 @@ import org.nd4j.linalg.dataset.api.MultiDataSetPreProcessor;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 
-import io.rj93.sarcasm.cnn.Channel;
-import io.rj93.sarcasm.cnn.MultiResult;
+import io.rj93.sarcasm.cnn.channels.Channel;
+import io.rj93.sarcasm.cnn.channels.MultiResult;
 
 @SuppressWarnings("serial")
 public class CnnSentenceChannelDataSetIterator implements MultiDataSetIterator {

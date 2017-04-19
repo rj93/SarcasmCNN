@@ -1,4 +1,4 @@
-package io.rj93.sarcasm.cnn;
+package io.rj93.sarcasm.cnn.channels;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -82,7 +82,7 @@ public class WordVectorChannel extends Channel {
         }
 
         int[] featuresShape = new int[4];
-        featuresShape[0] = sentences.size();;
+        featuresShape[0] = sentences.size();
         featuresShape[1] = 1;
         if (sentencesAlongHeight) {
             featuresShape[2] = maxLength;
@@ -174,6 +174,10 @@ public class WordVectorChannel extends Channel {
 	
 	@Override
 	public String toString(){
+		return getConfig().toString();
+	}
+	
+	public JSONObject getConfig(){
 		JSONObject json = new JSONObject();
 		
 		json.put("type", TYPE);
@@ -182,8 +186,10 @@ public class WordVectorChannel extends Channel {
 		json.put("useNormalizedWordVectors", useNormalizedWordVectors);
 		json.put("unknownWordHandling", unknownWordHandling);
 		
-		return json.toString();
+		return json;
 	}
+	
+
 
 	public static Channel loadFromConfig(JSONObject config) {
 
@@ -191,7 +197,7 @@ public class WordVectorChannel extends Channel {
 		int maxSentenceLength = config.getInt("maxSentenceLength");
 		boolean useNormalizedWordVectors = config.getBoolean("useNormalizedWordVectors");
 		UnknownWordHandling unknownWordHandling;
-		if (config.get("").equals("UseUnknownVector")){
+		if (config.get("unknownWordHandling").equals("UseUnknownVector")){
 			unknownWordHandling = UnknownWordHandling.UseUnknownVector;
 		} else {
 			unknownWordHandling = UnknownWordHandling.RemoveWord;

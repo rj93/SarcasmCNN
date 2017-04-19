@@ -1,4 +1,4 @@
-package io.rj93.sarcasm.cnn;
+package io.rj93.sarcasm.cnn.channels;
 
 import java.util.List;
 
@@ -13,6 +13,10 @@ public abstract class Channel {
 	
 	public abstract MultiResult getFeatureVectors(List<String> sentences);
 	
+	public static Channel loadFromConfig(String config){
+		return loadFromConfig(new JSONObject(config));
+	}
+	
 	public static Channel loadFromConfig(JSONObject config){
 		String type = config.getString("type");
 		
@@ -22,4 +26,6 @@ public abstract class Channel {
 		
 		return null;
 	}
+	
+	public abstract JSONObject getConfig();
 }

@@ -55,7 +55,10 @@ import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
+import org.springframework.format.datetime.standard.DateTimeContextHolder;
 
+import io.rj93.sarcasm.cnn.channels.Channel;
+import io.rj93.sarcasm.cnn.channels.WordVectorChannel;
 import io.rj93.sarcasm.filters.TestFileFilter;
 import io.rj93.sarcasm.filters.TrainFileFilter;
 import io.rj93.sarcasm.iterators.CnnSentenceChannelDataSetIterator;
@@ -70,7 +73,7 @@ public class TextCNN {
 	private int nChannels;
 	private String[] channelNames;
 	private int nOutputs; // number of labels
-	private int batchSize;
+	private int batchSize = 32;
 	private int nEpochs;
 	private int iterations = 1;
 	private int seed;
@@ -308,7 +311,7 @@ public class TextCNN {
 		
 		JSONArray channels = new JSONArray();
 		for (int channel = 0; channel < nChannels; channel++){
-			channels.put(this.channels.get(channel).toString());
+			channels.put(this.channels.get(channel).getConfig());
 		}
 		
 		JSONObject configJson = new JSONObject();
@@ -324,13 +327,12 @@ public class TextCNN {
 	public static TextCNN loadFromDir(String dir, String fileName) throws IOException{
 			
 		JSONObject config = loadConfig(dir);
-		int nOutputs = config.getInt("nOutputs");
 		int seed = config.getInt("seed");
 		
 		List<Channel> channels = new ArrayList<Channel>();
 		JSONArray channelsArray = config.getJSONArray("channels");
 		for (int i = 0; i < channelsArray.length(); i++){
-			channels.add(Channel.loadFromConfig(channelsArray.getJSONObject(i)));
+			channels.add(Channel.loadFromConfig(channelsArray.getString(i)));
 		}
 		
 		Map<String, Integer> labels = new HashMap<String, Integer>();
@@ -373,6 +375,15 @@ public class TextCNN {
 	}
 	
 	public void test(List<File> testFiles) throws FileNotFoundException {
+		MultiDataSetIterator testIter = getMultiDataSetIterator(testFiles);
+		
+		long start = System.nanoTime();
+		ComputationGraph graph = (ComputationGraph) model;
+        Evaluation evaluation = graph.evaluate(testIter);
+        long diff = System.nanoTime() - start;
+        logger.info("Evaluation complete in: " + PrettyTime.prettyNano(diff));
+        
+        logger.info(evaluation.stats());
 	}
 	
 	public void startUIServer(){
@@ -406,41 +417,20 @@ public class TextCNN {
 		List<File> testFiles = getSarcasmFiles(false);
 		
 		try {
-			TextCNN cnn = new TextCNN(outputs, batchSize, epochs, channels);
-			cnn.startUIServer();
-			long start = System.nanoTime();
-			cnn.train(trainFiles, testFiles);
-			long diff = System.nanoTime() - start;
-			logger.info("Total time taken: " + PrettyTime.prettyNano(diff));
+//			TextCNN cnn = new TextCNN(outputs, batchSize, epochs, channels);
+//			cnn.startUIServer();
+//			long start = System.nanoTime();
+//			cnn.train(trainFiles, testFiles);
+//			long diff = System.nanoTime() - start;
+//			logger.info("Total time taken: " + PrettyTime.prettyNano(diff));
+			TextCNN cnn = TextCNN.loadFromDir(DataHelper.MODELS_DIR, "model.bin");
+			cnn.test(testFiles);
 		} catch (Exception e){
 			e.printStackTrace();
 		} finally {
 			System.exit(-1);
 		}
 		
-	}
-	
-	private static List<File> getSentimentFiles(boolean training) throws FileNotFoundException{
-		logger.info("using sentiment files");
-		String dirStr = "C:/Users/Richard/AppData/Local/Temp/dl4j_w2vSentiment/aclImdb/";
-		File[] filesPos;
-		File[] filesNeg;
-		if (training) {
-			filesPos = new File(dirStr + "train/pos").listFiles();
-			filesNeg = new File(dirStr + "train/neg").listFiles();
-		} else {
-			filesPos = new File(dirStr + "test/pos").listFiles();
-			filesNeg = new File(dirStr + "test/neg").listFiles();
-		}
-		
-		List<File> files = new ArrayList<File>();
-		for (int i = 0; i < filesPos.length; i++){
-			files.add(filesPos[i]);
-		}
-		for (int i = 0; i < filesNeg.length; i++){
-			files.add(filesNeg[i]);
-		}
-		return files;
 	}
 	
 	private static List<File> getSarcasmFiles(boolean training) throws FileNotFoundException{

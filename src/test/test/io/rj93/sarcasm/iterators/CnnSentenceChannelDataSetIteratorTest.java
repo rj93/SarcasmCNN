@@ -24,8 +24,8 @@ import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 
-import io.rj93.sarcasm.cnn.Channel;
-import io.rj93.sarcasm.cnn.WordVectorChannel;
+import io.rj93.sarcasm.cnn.channels.Channel;
+import io.rj93.sarcasm.cnn.channels.WordVectorChannel;
 import io.rj93.sarcasm.utils.DataHelper;
 
 public class CnnSentenceChannelDataSetIteratorTest {

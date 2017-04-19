@@ -1,4 +1,4 @@
-package io.rj93.sarcasm.cnn;
+package io.rj93.sarcasm.cnn.channels;
 
 import org.nd4j.linalg.api.ndarray.INDArray;
 
