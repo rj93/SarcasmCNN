@@ -18,20 +18,19 @@ import io.rj93.sarcasm.cnn.TextCNN;
 import io.rj93.sarcasm.utils.DataHelper;
 import play.mvc.Http.Status;
 
-/**
- * Root resource (exposed at "myresource" path)
- */
 @Path("api/")
 public class MyResource {
 
 private static Logger logger = LogManager.getLogger(MyResource.class);
 	
-	private static TextCNN cnn = loadTextCNN();
+	private static final TextCNN cnn = loadTextCNN();
 	
 	private static TextCNN loadTextCNN(){
 		TextCNN cnn = null;
 		try {
+			logger.info("Loading CNN...");
 			cnn = TextCNN.loadFromDir(DataHelper.MODELS_DIR, "model.bin");
+			logger.info("Loading CNN complete");
 		} catch (IOException e) {
 			logger.catching(e);
 			logger.fatal("CNN wasn't able to initialise");
@@ -62,7 +61,7 @@ private static Logger logger = LogManager.getLogger(MyResource.class);
 				json.put("probabilityPositive", p.getProbabilityPositive());
 				json.put("probabilityNegative", p.getProbabilityPositive());
 				logger.info(json.toString(4));
-				response = Response.ok(json, MediaType.APPLICATION_JSON).build();
+				response = Response.ok(json.toString(), MediaType.APPLICATION_JSON).build();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

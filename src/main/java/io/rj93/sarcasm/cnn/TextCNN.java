@@ -110,6 +110,7 @@ public class TextCNN {
 	public TextCNN(ComputationGraph model, List<Channel> channels, Map<String, Integer> labels, int seed) {
 		this.model = model;
 		this.channels = channels;
+		this.nChannels = channels.size();
 		this.labelsMap = labels;
 		this.seed = seed;
 	}

@@ -25,4 +25,11 @@ public class Prediction {
 	public boolean isNegative(){
 		return probabilityNegative > probabilityPositive;
 	}
+
+	@Override
+	public String toString() {
+		return "Prediction [probabilityPositive=" + probabilityPositive + ", probabilityNegative=" + probabilityNegative + "]";
+	}
+	
+	
 }
