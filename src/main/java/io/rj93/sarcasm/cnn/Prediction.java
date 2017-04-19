@@ -10,6 +10,14 @@ public class Prediction {
 		this.probabilityNegative = probabilityNegative;
 	}
 	
+	public double getProbabilityPositive(){
+		return probabilityPositive;
+	}
+	
+	public double getProbabilityNegative(){
+		return probabilityNegative;
+	}
+	
 	public boolean isPositive(){
 		return probabilityPositive > probabilityNegative;
 	}
