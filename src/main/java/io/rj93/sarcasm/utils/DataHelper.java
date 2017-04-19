@@ -23,6 +23,9 @@ import org.apache.commons.io.filefilter.FileFilterUtils;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 
+import io.rj93.sarcasm.filters.TestFileFilter;
+import io.rj93.sarcasm.filters.TrainFileFilter;
+
 public class DataHelper {
 	
 	public final static String DATA_DIR = getDataDir();
@@ -112,6 +115,14 @@ public class DataHelper {
 			}
 		}
 		System.out.println("Skipped " + count + " files");
+	}
+	
+	public static List<File> getSarcasmFiles(boolean training) throws FileNotFoundException{
+		File dir = new File(DataHelper.PREPROCESSED_DATA_DIR + "2015-quick");
+		if (training)
+			return DataHelper.getFilesFromDir(dir, new TrainFileFilter(2), true);
+		else 
+			return DataHelper.getFilesFromDir(dir, new TestFileFilter(2), true);
 	}
 	
 	public static Map<String, String> getRedditCompDataSet(boolean train) throws IOException {

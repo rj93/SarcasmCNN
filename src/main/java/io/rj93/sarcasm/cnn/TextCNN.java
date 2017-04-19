@@ -2,7 +2,6 @@ package io.rj93.sarcasm.cnn;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
@@ -14,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -23,17 +21,11 @@ import org.apache.logging.log4j.Logger;
 import org.deeplearning4j.api.storage.StatsStorage;
 import org.deeplearning4j.earlystopping.EarlyStoppingConfiguration;
 import org.deeplearning4j.earlystopping.EarlyStoppingResult;
-import org.deeplearning4j.earlystopping.saver.LocalFileGraphSaver;
-import org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculatorCG;
-import org.deeplearning4j.earlystopping.termination.MaxEpochsTerminationCondition;
-import org.deeplearning4j.earlystopping.termination.MaxTimeIterationTerminationCondition;
 import org.deeplearning4j.earlystopping.trainer.EarlyStoppingGraphTrainer;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.iterator.LabeledSentenceProvider;
 import org.deeplearning4j.iterator.CnnSentenceDataSetIterator.UnknownWordHandling;
 import org.deeplearning4j.iterator.provider.CollectionLabeledSentenceProvider;
-import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
-import org.deeplearning4j.models.embeddings.wordvectors.WordVectors;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.ConvolutionMode;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -55,7 +47,6 @@ import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
-import org.springframework.format.datetime.standard.DateTimeContextHolder;
 
 import io.rj93.sarcasm.cnn.channels.Channel;
 import io.rj93.sarcasm.cnn.channels.WordVectorChannel;
@@ -212,12 +203,10 @@ public class TextCNN {
 		logger.info("train - trainFiles: " + trainFiles.size() + ", testFiles: " + testFiles.size());
 		
 		MultiDataSetIterator trainIter = getMultiDataSetIterator(trainFiles);
-		MultiDataSetIterator testIter = getMultiDataSetIterator(testFiles);
-		labelsMap = ((CnnSentenceChannelDataSetIterator) testIter).getLabelsMap();
+		labelsMap = ((CnnSentenceChannelDataSetIterator) trainIter).getLabelsMap();
 		
 		logger.info("Training Model...");
 		for (int i = 0; i < nEpochs; i++){
-			
 			
 			logger.info("Starting epoch " + i + "... ");
 			long start = System.nanoTime();
@@ -225,16 +214,10 @@ public class TextCNN {
 			long diff = System.nanoTime() - start;
 			logger.info("Epoch " + i + " complete in " + PrettyTime.prettyNano(diff) + ". Starting evaluation...");
 			
-			start = System.nanoTime();
-			ComputationGraph graph = (ComputationGraph) model;
-            Evaluation evaluation = graph.evaluate(testIter);
-            diff = System.nanoTime() - start;
-            logger.info("Evaluation complete in: " + PrettyTime.prettyNano(diff));
-            
+			Evaluation evaluation = test(testFiles);            
             logger.info(evaluation.stats());
             
             trainIter.reset();
-            testIter.reset();
 		}
 		logger.info("Training Complete");
 		
@@ -242,47 +225,22 @@ public class TextCNN {
 		save(dir, "model.bin");
 	}
 	
-	public void trainEarlyStopping(List<File> trainFiles, List<File> testFiles) throws IOException {
+	public EarlyStoppingResult<ComputationGraph> train(List<File> trainFiles, EarlyStoppingConfiguration<ComputationGraph> esConf) throws IOException {
 		
-		logger.info("trainEarlyStopping - trainFiles: " + trainFiles.size() + ", testFiles: " + testFiles.size());
+		logger.info("train - trainFiles: " + trainFiles.size());
 		
 		String dir = getModelSaveDir();
 		new File(dir).mkdirs();
 		
 		MultiDataSetIterator trainIter = getMultiDataSetIterator(trainFiles);
-		MultiDataSetIterator testIter = getMultiDataSetIterator(testFiles);
-		labelsMap = ((CnnSentenceChannelDataSetIterator) testIter).getLabelsMap();
-		
-		EarlyStoppingConfiguration<ComputationGraph> esConf = new EarlyStoppingConfiguration.Builder<ComputationGraph>()
-				.epochTerminationConditions(new MaxEpochsTerminationCondition(30))
-				.iterationTerminationConditions(new MaxTimeIterationTerminationCondition(1, TimeUnit.HOURS))
-				.scoreCalculator(new DataSetLossCalculatorCG(testIter, true))
-		        .evaluateEveryNEpochs(1)
-				.modelSaver(new LocalFileGraphSaver(dir))
-				.build();
+		labelsMap = ((CnnSentenceChannelDataSetIterator) trainIter).getLabelsMap();
 		
 		EarlyStoppingGraphTrainer trainer = new EarlyStoppingGraphTrainer(esConf, model, trainIter, null);
-		
 		EarlyStoppingResult<ComputationGraph> result = trainer.fit();
-		
-		logger.info("Termination reason: " + result.getTerminationReason());
-		logger.info("Termination details: " + result.getTerminationDetails());
-		logger.info("Total epochs: " + result.getTotalEpochs());
-		logger.info("Best epoch number: " + result.getBestModelEpoch());
-		logger.info("Score at best epoch: " + result.getBestModelScore());
-		
-		ComputationGraph bestModel = result.getBestModel();
-		testIter.reset();
-		
-		logger.info("Starting evaluation...");
-		long start = System.nanoTime();
-        Evaluation evaluation = bestModel.evaluate(testIter);
-        long diff = System.nanoTime() - start;
-        logger.info("Evaluation complete in: " + PrettyTime.prettyNano(diff));
-        
-        logger.info(evaluation.stats());
         
         save(dir, "model.bin");
+        
+        return result;
 	}
 	
 	private static String getModelSaveDir(){
@@ -374,16 +332,17 @@ public class TextCNN {
 		
 	}
 	
-	public void test(List<File> testFiles) throws FileNotFoundException {
+	public Evaluation test(List<File> testFiles) throws FileNotFoundException {
 		MultiDataSetIterator testIter = getMultiDataSetIterator(testFiles);
 		
+		logger.info("Starting evaluation...");
 		long start = System.nanoTime();
 		ComputationGraph graph = (ComputationGraph) model;
         Evaluation evaluation = graph.evaluate(testIter);
         long diff = System.nanoTime() - start;
         logger.info("Evaluation complete in: " + PrettyTime.prettyNano(diff));
         
-        logger.info(evaluation.stats());
+        return evaluation;
 	}
 	
 	public void startUIServer(){
@@ -410,11 +369,8 @@ public class TextCNN {
 //		channels.add(new WordVectorChannel(DataHelper.GOOGLE_NEWS_WORD2VEC, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
 		channels.add(new WordVectorChannel(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb", true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
 		
-		for (Channel c : channels){
-			System.out.println(c.toString());
-		}
-		List<File> trainFiles = getSarcasmFiles(true);
-		List<File> testFiles = getSarcasmFiles(false);
+		List<File> trainFiles = DataHelper.getSarcasmFiles(true);
+		List<File> testFiles = DataHelper.getSarcasmFiles(false);
 		
 		try {
 //			TextCNN cnn = new TextCNN(outputs, batchSize, epochs, channels);
@@ -431,15 +387,6 @@ public class TextCNN {
 			System.exit(-1);
 		}
 		
-	}
-	
-	private static List<File> getSarcasmFiles(boolean training) throws FileNotFoundException{
-		logger.info("using sarcastic files");
-		File dir = new File(DataHelper.PREPROCESSED_DATA_DIR + "2015-quick");
-		if (training)
-			return DataHelper.getFilesFromDir(dir, new TrainFileFilter(2), true);
-		else 
-			return DataHelper.getFilesFromDir(dir, new TestFileFilter(2), true);
 	}
 
 }

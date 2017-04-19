@@ -172,11 +172,6 @@ public class WordVectorChannel extends Channel {
         return tokens;
     }
 	
-	@Override
-	public String toString(){
-		return getConfig().toString();
-	}
-	
 	public JSONObject getConfig(){
 		JSONObject json = new JSONObject();
 		
@@ -188,8 +183,6 @@ public class WordVectorChannel extends Channel {
 		
 		return json;
 	}
-	
-
 
 	public static Channel loadFromConfig(JSONObject config) {
 
@@ -204,6 +197,12 @@ public class WordVectorChannel extends Channel {
 		}
 		
 		return new WordVectorChannel(path, useNormalizedWordVectors, unknownWordHandling, maxSentenceLength);
+	}
+	
+	
+	@Override
+	public String toString(){
+		return getConfig().toString();
 	}
 
 }
