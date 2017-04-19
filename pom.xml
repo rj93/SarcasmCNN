@@ -1,12 +1,16 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  	<modelVersion>4.0.0</modelVersion>
-  	<groupId>io.rj93</groupId>
-  	<artifactId>sarcasm</artifactId>
-  	<version>0.0.1-SNAPSHOT</version>
-  	<name>SarcasmCNN</name>
-  	
-  	<properties>
-        <!-- Change the nd4j.backend property to nd4j-cuda-7.5-platform or nd4j-cuda-8.0-platform to use CUDA GPUs -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.rj93.sarcasm</groupId>
+    <artifactId>sarcasm</artifactId>
+    <packaging>jar</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <name>sarcasm</name>
+	
+	    <properties>
+    	<!-- Change the nd4j.backend property to nd4j-cuda-7.5-platform or nd4j-cuda-8.0-platform to use CUDA GPUs -->
         <nd4j.backend>nd4j-native-platform</nd4j.backend> 
         <!-- <nd4j.backend>nd4j-cuda-8.0-platform</nd4j.backend> -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -31,9 +35,12 @@
         
         <slf4j.version>1.7.25</slf4j.version>
         <log4j.version>2.8.1</log4j.version>
+    
+        <jersey.version>2.25.1</jersey.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-  	
-  	<repositories>
+    
+    <repositories>
         <repository>
             <id>snapshots-repo</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
@@ -45,7 +52,7 @@
             </snapshots>
         </repository>
     </repositories>
-
+    
     <distributionManagement>
         <snapshotRepository>
             <id>sonatype-nexus-snapshots</id>
@@ -58,10 +65,10 @@
             <url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
-
+	
     <dependencyManagement>
         <dependencies>
-            <dependency>
+        	<dependency>
                 <groupId>org.nd4j</groupId>
                 <artifactId>nd4j-native-platform</artifactId>
                 <version>${nd4j.version}</version>
@@ -76,12 +83,18 @@
                 <artifactId>nd4j-cuda-8.0-platform</artifactId>
                 <version>${nd4j.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey</groupId>
+                <artifactId>jersey-bom</artifactId>
+                <version>${jersey.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-    
-        <!-- ND4J backend. You need one in every DL4J project. Normally define artifactId as either "nd4j-native-platform" or "nd4j-cuda-7.5-platform" -->
+    	<!-- ND4J backend. You need one in every DL4J project. Normally define artifactId as either "nd4j-native-platform" or "nd4j-cuda-7.5-platform" -->
         <dependency>
             <groupId>org.nd4j</groupId>
             <artifactId>${nd4j.backend}</artifactId>
@@ -134,7 +147,7 @@
 		    <version>${joda-time.version}</version>
 		</dependency>
 		
-		<!-- LOGGING -->
+		<!-- Logging -->
 		<dependency>
 		    <groupId>org.slf4j</groupId>
 		    <artifactId>slf4j-api</artifactId>
@@ -155,114 +168,53 @@
 		    <artifactId>log4j-core</artifactId>
 		    <version>${log4j.version}</version>
 		</dependency>
-		
-    </dependencies>
     
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-grizzly2-http</artifactId>
+        </dependency>
+        <!-- uncomment this to get JSON support:
+         <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-moxy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.9</version>
+            <scope>test</scope>
+        </dependency>
+        -->
+    </dependencies>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>${exec-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <executable>java</executable>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>${maven-shade-plugin.version}</version>
-                <configuration>
-                    <shadedArtifactAttached>true</shadedArtifactAttached>
-                    <shadedClassifierName>${shadedClassifier}</shadedClassifierName>
-                    <createDependencyReducedPom>true</createDependencyReducedPom>
-                    <filters>
-                        <filter>
-                            <artifact>*:*</artifact>
-                            <excludes>
-                                <exclude>org/datanucleus/**</exclude>
-                                <exclude>META-INF/*.SF</exclude>
-                                <exclude>META-INF/*.DSA</exclude>
-                                <exclude>META-INF/*.RSA</exclude>
-                            </excludes>
-                        </filter>
-                    </filters>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                    <resource>reference.conf</resource>
-                                </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                </transformer>
-                            </transformers>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.5.1</version>
+                <version>2.5.1</version>
+                <inherited>true</inherited>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <source>1.7</source>
+                    <target>1.7</target>
                 </configuration>
             </plugin>
-        
-	        <plugin>
-			  	<artifactId>maven-assembly-plugin</artifactId>
-			  	<configuration>
-			  		<archive>
-			      		<manifest>
-			        		<mainClass>io.rj93.sarcasm.Main</mainClass>
-			      		</manifest>
-			    	</archive>
-			    	<descriptorRefs>
-			      		<descriptorRef>jar-with-dependencies</descriptorRef>
-			    	</descriptorRefs>
-			  	</configuration>
-			  	<executions>
-			    	<execution>
-			      		<id>make-assembly</id>
-			      		<phase>package</phase>
-			      		<goals>
-			        		<goal>single</goal>
-			      		</goals>
-			    	</execution>
-				</executions>
-			</plugin>
-			
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.2.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mainClass>io.rj93.sarcasm.Main</mainClass>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>OpenJFX</id>
-            <dependencies>
-                <dependency>
-                    <groupId>com.oracle</groupId>
-                    <artifactId>javafx</artifactId>
-                    <version>${javafx.version}</version>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
-  
+    
 </project>
