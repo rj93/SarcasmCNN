@@ -22,7 +22,9 @@ public class Server {
     public static HttpServer startServer() {
         // create a resource config that scans for JAX-RS resources and providers
         // in io.rj93.sarcasm package
-        final ResourceConfig rc = new ResourceConfig().packages("io.rj93.sarcasm.server");
+        final ResourceConfig rc = new ResourceConfig()
+        								.packages("io.rj93.sarcasm.server")
+        								.register(CORSFilter.class);
 
         // create and start a new instance of grizzly http server
         // exposing the Jersey application at BASE_URI

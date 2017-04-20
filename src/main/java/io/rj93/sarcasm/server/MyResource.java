@@ -39,9 +39,9 @@ private static Logger logger = LogManager.getLogger(MyResource.class);
 	}
 	
 	@GET
-	@Path("test")
-	public String test(){
-		return "test\n";
+	@Path("init/")
+	public Response init(){
+		return Response.ok("").build();
 	}
 	
 	@GET
