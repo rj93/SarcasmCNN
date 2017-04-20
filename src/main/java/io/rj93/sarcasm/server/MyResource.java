@@ -59,7 +59,7 @@ private static Logger logger = LogManager.getLogger(MyResource.class);
 				JSONObject json = new JSONObject();
 				json.put("sarcastic", p.isPositive());
 				json.put("probabilityPositive", p.getProbabilityPositive());
-				json.put("probabilityNegative", p.getProbabilityPositive());
+				json.put("probabilityNegative", p.getProbabilityNegative());
 				logger.info(json.toString(4));
 				response = Response.ok(json.toString(), MediaType.APPLICATION_JSON).build();
 			} catch (Exception e) {
