@@ -15,7 +15,7 @@ import java.net.URI;
  */
 public class Server {
 	
-	Logger logger = LogManager.getLogger(Server.class);
+	private static final Logger logger = LogManager.getLogger(Server.class);
 	
     private final String BASE_URI;
 	private final int port;
