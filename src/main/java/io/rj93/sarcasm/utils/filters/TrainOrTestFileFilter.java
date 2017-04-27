@@ -1,4 +1,4 @@
-package io.rj93.sarcasm.filters;
+package io.rj93.sarcasm.utils.filters;
 
 import java.io.File;
 import java.io.FileFilter;

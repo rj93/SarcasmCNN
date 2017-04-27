@@ -23,8 +23,8 @@ import org.apache.commons.io.filefilter.FileFilterUtils;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 
-import io.rj93.sarcasm.filters.TestFileFilter;
-import io.rj93.sarcasm.filters.TrainFileFilter;
+import io.rj93.sarcasm.utils.filters.TestFileFilter;
+import io.rj93.sarcasm.utils.filters.TrainFileFilter;
 
 public class DataHelper {
 	

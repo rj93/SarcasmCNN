@@ -9,10 +9,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import java.io.IOException;
 import java.net.URI;
 
-/**
- * Main class.
- *
- */
 public class Server {
 	
 	private static final Logger logger = LogManager.getLogger(Server.class);

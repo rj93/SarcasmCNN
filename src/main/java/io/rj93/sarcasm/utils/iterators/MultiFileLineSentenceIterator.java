@@ -1,4 +1,4 @@
-package io.rj93.sarcasm.iterators;
+package io.rj93.sarcasm.utils.iterators;
 
 import java.io.BufferedInputStream;
 import java.io.File;

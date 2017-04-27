@@ -50,9 +50,9 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 
 import io.rj93.sarcasm.cnn.channels.Channel;
 import io.rj93.sarcasm.cnn.channels.WordVectorChannel;
-import io.rj93.sarcasm.iterators.CnnSentenceChannelDataSetIterator;
 import io.rj93.sarcasm.utils.DataHelper;
 import io.rj93.sarcasm.utils.PrettyTime;
+import io.rj93.sarcasm.utils.iterators.CnnSentenceChannelDataSetIterator;
 
 public class TextCNN {
 	

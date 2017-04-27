@@ -27,6 +27,7 @@ import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import io.rj93.sarcasm.cnn.channels.Channel;
 import io.rj93.sarcasm.cnn.channels.WordVectorChannel;
 import io.rj93.sarcasm.utils.DataHelper;
+import io.rj93.sarcasm.utils.iterators.CnnSentenceChannelDataSetIterator;
 
 public class CnnSentenceChannelDataSetIteratorTest {
 private static final int seed = 100;

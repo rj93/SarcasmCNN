@@ -1,4 +1,4 @@
-package io.rj93.sarcasm.filters;
+package io.rj93.sarcasm.utils.filters;
 
 public class TrainFileFilter extends TrainOrTestFileFilter {
 	
