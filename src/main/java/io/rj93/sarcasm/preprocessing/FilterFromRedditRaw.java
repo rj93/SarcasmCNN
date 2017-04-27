@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.rj93.sarcasm.utils.DataHelper;
+import io.rj93.sarcasm.utils.PrettyTime;
 
 public class FilterFromRedditRaw implements Runnable {
 	
@@ -92,25 +93,27 @@ public class FilterFromRedditRaw implements Runnable {
 		PrintWriter negativeWriter = null;
 		int posCount = 0;
 		int negCount = 0;
+		int count = 0;
 		try {
 			br = new BufferedReader(new FileReader(inFile));
-			positiveWriter = new PrintWriter(outPositivePath + inFile.getName(), "UTF-8");
-			negativeWriter = new PrintWriter(outNegativePath + inFile.getName(), "UTF-8");
+//			positiveWriter = new PrintWriter(outPositivePath + inFile.getName(), "UTF-8");
+//			negativeWriter = new PrintWriter(outNegativePath + inFile.getName(), "UTF-8");
 			
 			String line;
 		    while ((line = br.readLine()) != null) {
+		    	count++;
 		    	JSONObject comment = new JSONObject(line);
 		    	String body = comment.getString("body");
 		    	
 		    	if (body.endsWith(" /s")){ // body is sarcastic
 		    		sarcasticSizes.add(body.length());
-		    		positiveWriter.println(line);
+//		    		positiveWriter.println(line);
 		    		posCount++;
 		    	} else if (sarcasticSizes.size() > 0){ // search for similar sized non-sarcastic comments
 		    		for (int i = 0; i < sarcasticSizes.size(); i++){
 		    			int size = sarcasticSizes.get(i);
 		    			if (Math.abs(body.length() - size) <= (0.1 * size)){ // compare sizes to be within 10% of each other
-		    				negativeWriter.println(line);
+//		    				negativeWriter.println(line);
 		    				sarcasticSizes.remove(i);
 		    				negCount++;
 		    				break;
@@ -119,7 +122,7 @@ public class FilterFromRedditRaw implements Runnable {
 		    	}
 		    }
 
-			logger.info("filter: {} completed, pos = {}, neg = {}", inFilePath, posCount, negCount);
+			logger.info("filter: {} completed, pos = {}, neg = {}, total = {}", inFilePath, posCount, negCount, count);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -133,18 +136,20 @@ public class FilterFromRedditRaw implements Runnable {
 	
 	@Override
 	public void run() {
-		System.out.println(String.format("Thread %d - Decompressing: %s", id, inFilePath));
+		long start = System.nanoTime();
+		logger.info("Thread {} - Decompressing: {}", id, inFilePath);
 		String decompressedFilePath = inFilePath.replace("bz2", "json");
 
 		if (decompressFile(inFilePath, decompressedFilePath)){
-			System.out.println(String.format("Thread %d - Completed decompressing: %s", id, inFilePath));
+			logger.info("Thread {} - Completed decompressing: {}", id, inFilePath);
 			
 			filter(decompressedFilePath, outDir);
-			System.out.println(String.format("Thread %d - Completed filtering: %s", id, decompressedFilePath));
+			logger.info("Thread {} - Completed filtering: {}", id, decompressedFilePath);
 			
 			deleteFile(decompressedFilePath);
 		}
-		System.out.println(String.format("Thread %d - Finished", id));
+		long diff = System.nanoTime()- start;
+		logger.info("Thread {} - finished in {}", id, PrettyTime.prettyNano(diff));
 	}
 	
 	public static void main(String[] args) {
@@ -158,7 +163,7 @@ public class FilterFromRedditRaw implements Runnable {
 				}
 			});
 			
-			ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+			ExecutorService executor = Executors.newFixedThreadPool(4);
 			int id = 0;
 			for (File f : compressedFiles){
 				String outputDir = DataHelper.REDDIT_FILTERED_DIR + f.getParentFile().getName() + "/";

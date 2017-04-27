@@ -19,9 +19,9 @@ import io.rj93.sarcasm.utils.DataHelper;
 import play.mvc.Http.Status;
 
 @Path("api/")
-public class MyResource {
+public class Endpoints {
 
-private static Logger logger = LogManager.getLogger(MyResource.class);
+private static Logger logger = LogManager.getLogger(Endpoints.class);
 	
 	private static final TextCNN cnn = loadTextCNN();
 	
