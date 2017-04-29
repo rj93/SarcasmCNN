@@ -19,7 +19,7 @@ public class SentimentChannelTest {
 		List<String> strings = new ArrayList<String>();
 		strings.add("bad test good");
 		strings.add("bad bad bad");
-//		strings.add("good good good test good");
+		strings.add("good good good test good");
 		System.out.println(channel.getFeatureVectors(strings).getFeatures());
 	}
 }

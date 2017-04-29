@@ -53,7 +53,12 @@ public class SentimentChannel extends Channel {
 			for (int partIndex = 0; partIndex < nParts; partIndex++){
 				for (int tokenIndex = 0; tokenIndex < tokensPerPart; tokenIndex++){
 					int tokenListIndex = (partIndex * tokensPerPart) + tokenIndex;
-					parts[partIndex][tokenIndex] = tokens.get(tokenListIndex);
+					String token;
+					if (tokenListIndex < tokens.size())
+						token = tokens.get(tokenListIndex);
+					else
+						token = "";
+					parts[partIndex][tokenIndex] = token;
 				}
 			}
 			
@@ -85,6 +90,7 @@ public class SentimentChannel extends Channel {
 	}
 	
 	private double getSentimentScore(String word){
+		// TODO
 		double score = 0;
 		if (word.equals("good")){
 			score = 1;
