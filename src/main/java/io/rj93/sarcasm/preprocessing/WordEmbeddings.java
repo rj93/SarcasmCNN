@@ -1,4 +1,4 @@
-package io.rj93.sarcasm.utils;
+package io.rj93.sarcasm.preprocessing;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,9 +17,10 @@ import org.deeplearning4j.text.tokenization.tokenizerfactory.DefaultTokenizerFac
 import org.deeplearning4j.text.tokenization.tokenizerfactory.TokenizerFactory;
 import org.nd4j.linalg.api.ndarray.INDArray;
 
+import io.rj93.sarcasm.iterators.MultiFileLineSentenceIterator;
+import io.rj93.sarcasm.utils.DataHelper;
 import io.rj93.sarcasm.utils.filters.TestFileFilter;
 import io.rj93.sarcasm.utils.filters.TrainFileFilter;
-import io.rj93.sarcasm.utils.iterators.MultiFileLineSentenceIterator;
 
 public class WordEmbeddings {
 	
