@@ -12,48 +12,47 @@
   </class>  
   <class id="2" language="java" name="io.rj93.sarcasm.cnn.channels.Channel" project="JSarcasmCNN" 
     file="/JSarcasmCNN/src/main/java/io/rj93/sarcasm/cnn/channels/Channel.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="844" y="236"/>    
+    <position height="-1" width="-1" x="857" y="365"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="3" language="java" name="io.rj93.sarcasm.cnn.channels.SentimentChannel" project="JSarcasmCNN" 
-    file="/JSarcasmCNN/src/main/java/io/rj93/sarcasm/cnn/channels/SentimentChannel.java" binary="false" 
-    corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="843" y="-12"/>    
-    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
-      sort-features="false" accessors="true" visibility="true">      
-      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
-      <operations public="true" package="true" protected="true" private="true" static="true"/>    
-    </display>  
-  </class>  
-  <class id="4" language="java" name="io.rj93.sarcasm.cnn.channels.MultiResult" project="JSarcasmCNN" 
+  <class id="3" language="java" name="io.rj93.sarcasm.cnn.channels.MultiResult" project="JSarcasmCNN" 
     file="/JSarcasmCNN/src/main/java/io/rj93/sarcasm/cnn/channels/MultiResult.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="851" y="456"/>    
+    <position height="-1" width="-1" x="860" y="585"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="5" language="java" name="io.rj93.sarcasm.utils.iterators.CnnSentenceChannelDataSetIterator.Builder" 
+  <class id="4" language="java" name="io.rj93.sarcasm.iterators.CnnSentenceChannelDataSetIterator.Builder" 
     project="JSarcasmCNN" 
-    file="/JSarcasmCNN/src/main/java/io/rj93/sarcasm/utils/iterators/CnnSentenceChannelDataSetIterator.java" 
-    binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="1216" y="406"/>    
+    file="/JSarcasmCNN/src/main/java/io/rj93/sarcasm/iterators/CnnSentenceChannelDataSetIterator.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="1241" y="398"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="6" language="java" name="io.rj93.sarcasm.utils.iterators.CnnSentenceChannelDataSetIterator" 
-    project="JSarcasmCNN" 
-    file="/JSarcasmCNN/src/main/java/io/rj93/sarcasm/utils/iterators/CnnSentenceChannelDataSetIterator.java" 
-    binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="1207" y="42"/>    
+  <class id="5" language="java" name="io.rj93.sarcasm.iterators.CnnSentenceChannelDataSetIterator" project="JSarcasmCNN" 
+    file="/JSarcasmCNN/src/main/java/io/rj93/sarcasm/iterators/CnnSentenceChannelDataSetIterator.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="1238" y="46"/>    
+    <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
+      sort-features="false" accessors="true" visibility="true">      
+      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
+      <operations public="true" package="true" protected="true" private="true" static="true"/>    
+    </display>  
+  </class>  
+  <class id="6" language="java" name="io.rj93.sarcasm.cnn.channels.WordVectorChannel" project="JSarcasmCNN" 
+    file="/JSarcasmCNN/src/main/java/io/rj93/sarcasm/cnn/channels/WordVectorChannel.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="865" y="-32"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -61,49 +60,41 @@
     </display>  
   </class>  
   <association id="7">    
-    <end type="SOURCE" refId="1" navigable="false">      
-      <attribute id="8" name="channels">        
-        <position height="0" width="0" x="0" y="0"/>      
-      </attribute>      
-      <multiplicity id="9" minimum="0" maximum="2147483647">        
-        <position height="0" width="0" x="0" y="0"/>      
-      </multiplicity>    
+    <end type="SOURCE" refId="5" navigable="false">      
+      <attribute id="8" name="channels"/>      
+      <multiplicity id="9" minimum="0" maximum="2147483647"/>    
     </end>    
     <end type="TARGET" refId="2" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
   <association id="10">    
-    <end type="SOURCE" refId="5" navigable="false">      
-      <attribute id="11" name="channels">        
-        <position height="0" width="0" x="0" y="0"/>      
+    <end type="SOURCE" refId="4" navigable="false">      
+      <attribute id="11" name="channels"/>      
+      <multiplicity id="12" minimum="0" maximum="2147483647"/>    
+    </end>    
+    <end type="TARGET" refId="2" navigable="true"/>    
+    <display labels="true" multiplicity="true"/>  
+  </association>  
+  <association id="13">    
+    <end type="SOURCE" refId="1" navigable="false">      
+      <attribute id="14" name="channels">        
+        <position height="0" width="0" x="13" y="129"/>      
       </attribute>      
-      <multiplicity id="12" minimum="0" maximum="2147483647">        
-        <position height="0" width="0" x="0" y="0"/>      
+      <multiplicity id="15" minimum="0" maximum="2147483647">        
+        <position height="0" width="0" x="13" y="129"/>      
       </multiplicity>    
     </end>    
     <end type="TARGET" refId="2" navigable="true"/>    
     <display labels="true" multiplicity="true"/>  
   </association>  
-  <nesting id="13">    
+  <generalization id="16">    
     <end type="SOURCE" refId="6"/>    
-    <end type="TARGET" refId="5"/>  
-  </nesting>  
-  <association id="14">    
-    <end type="SOURCE" refId="6" navigable="false">      
-      <attribute id="15" name="channels">        
-        <position height="0" width="0" x="0" y="0"/>      
-      </attribute>      
-      <multiplicity id="16" minimum="0" maximum="2147483647">        
-        <position height="0" width="0" x="0" y="0"/>      
-      </multiplicity>    
-    </end>    
-    <end type="TARGET" refId="2" navigable="true"/>    
-    <display labels="true" multiplicity="true"/>  
-  </association>  
-  <generalization id="17">    
-    <end type="SOURCE" refId="3"/>    
     <end type="TARGET" refId="2"/>  
   </generalization>  
+  <nesting id="17">    
+    <end type="SOURCE" refId="5"/>    
+    <end type="TARGET" refId="4"/>  
+  </nesting>  
   <classifier-display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
     sort-features="false" accessors="true" visibility="true">    
     <attributes public="true" package="true" protected="true" private="true" static="true"/>    
