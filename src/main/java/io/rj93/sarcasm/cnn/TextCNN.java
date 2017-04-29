@@ -49,6 +49,7 @@ import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 
 import io.rj93.sarcasm.cnn.channels.Channel;
+import io.rj93.sarcasm.cnn.channels.SentimentChannel;
 import io.rj93.sarcasm.cnn.channels.WordVectorChannel;
 import io.rj93.sarcasm.iterators.CnnSentenceChannelDataSetIterator;
 import io.rj93.sarcasm.utils.DataHelper;
@@ -83,14 +84,17 @@ public class TextCNN {
 	}
 	
 	public TextCNN(int nOutputs, int batchSize, int nEpochs, List<Channel> channels, int seed){
+		channels.add(new SentimentChannel(3));
+		
 		this.nChannels = channels.size();
 		channelNames = new String[nChannels];
 		for (int i = 0; i < nChannels; i++){
 			channelNames[i] = "input" + i;
 		}
+		channelNames[1] = "sentimentChannel";
 		this.nOutputs = nOutputs;
 		
-		this.batchSize = batchSize;
+		this.batchSize = 32;
 		this.nEpochs = nEpochs;
 		
 		int vectorSize = 0;
@@ -128,19 +132,24 @@ public class TextCNN {
 				.learningRate(0.01)
 				.graphBuilder()
 				.addInputs(channelNames)
-				.addLayer("cnn3", getConvolutionLayer(3), channelNames)
-				.addLayer("cnn4", getConvolutionLayer(4), channelNames)
-				.addLayer("cnn5", getConvolutionLayer(5), channelNames)
+				.addLayer("cnn3", getConvolutionLayer(3), "input0")
+				.addLayer("cnn4", getConvolutionLayer(4), "input0")
+				.addLayer("cnn5", getConvolutionLayer(5), "input0")
+				.addLayer("sentimentLayer", getSentiLayer(1), "sentimentChannel")
+				.addLayer("sentimentPool", new GlobalPoolingLayer.Builder()
+						.poolingType(PoolingType.MAX)
+						.build(), "sentimentLayer")
 				.addVertex("merge", new MergeVertex(), "cnn3", "cnn4", "cnn5")
 				.addLayer("globalPool", new GlobalPoolingLayer.Builder()
 						.poolingType(PoolingType.MAX)
 						.build(), "merge")
+//				.addVertex("test", new MergeVertex(), "globalPool", "sentimentLayer")
 				.addLayer("out", new OutputLayer.Builder()
 						.lossFunction(LossFunctions.LossFunction.MCXENT)
 						.activation(Activation.SOFTMAX)
-						.nIn(3*cnnLayerFeatureMaps)
+						.nIn(3*cnnLayerFeatureMaps + cnnLayerFeatureMaps)
 						.nOut(nOutputs)
-						.build(), "globalPool")
+						.build(), "sentimentPool", "globalPool")
 				.setOutputs("out")
 				.build();
 		
@@ -151,7 +160,16 @@ public class TextCNN {
 		return new ConvolutionLayer.Builder()
 			.kernelSize(noWords,vectorSize)
 			.stride(1,vectorSize)
-			.nIn(nChannels)
+			.nIn(1)
+			.nOut(cnnLayerFeatureMaps)
+			.build();
+	}
+	
+	private ConvolutionLayer getSentiLayer(int noWords){
+		return new ConvolutionLayer.Builder()
+			.kernelSize(1,3)
+			.stride(1,3)
+			.nIn(1)
 			.nOut(cnnLayerFeatureMaps)
 			.build();
 	}
@@ -361,7 +379,7 @@ public class TextCNN {
 		
 		int outputs = 2; 
 		int batchSize = 32;
-		int epochs = 1;
+		int epochs = 5;
 		int maxSentenceLength = 100;
 	
 		List<Channel> channels = new ArrayList<Channel>();
@@ -372,14 +390,14 @@ public class TextCNN {
 		List<File> testFiles = DataHelper.getSarcasmFiles(false);
 		
 		try {
-//			TextCNN cnn = new TextCNN(outputs, batchSize, epochs, channels);
-//			cnn.startUIServer();
-//			long start = System.nanoTime();
-//			cnn.train(trainFiles, testFiles);
-//			long diff = System.nanoTime() - start;
-//			logger.info("Total time taken: " + PrettyTime.prettyNano(diff));
-			TextCNN cnn = TextCNN.loadFromDir(DataHelper.MODELS_DIR, "model.bin");
-			cnn.test(testFiles);
+			TextCNN cnn = new TextCNN(outputs, batchSize, epochs, channels);
+			cnn.startUIServer();
+			long start = System.nanoTime();
+			cnn.train(trainFiles, testFiles);
+			long diff = System.nanoTime() - start;
+			logger.info("Total time taken: " + PrettyTime.prettyNano(diff));
+//			TextCNN cnn = TextCNN.loadFromDir(DataHelper.MODELS_DIR, "model.bin");
+//			cnn.test(testFiles);
 		} catch (Exception e){
 			e.printStackTrace();
 		} finally {
