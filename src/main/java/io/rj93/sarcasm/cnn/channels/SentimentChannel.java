@@ -35,13 +35,14 @@ public class SentimentChannel extends Channel {
 	@Override
 	public MultiResult getFeatureVectors(List<String> sentences) {
 		
-		int[] featureShape = new int[]{sentences.size(), nParts};
-//		int[] featureShape = new int[4];
-//        featureShape[0] = sentences.size();
-//        featureShape[1] = 1;
-//        featureShape[2] = 3;
-//        featureShape[3] = 1;
-		INDArray features = Nd4j.create(sentences.size());
+//		int[] featureShape = new int[]{sentences.size(), nParts};
+		int[] featureShape = new int[4];
+        featureShape[0] = sentences.size();
+        featureShape[1] = 1;
+        featureShape[2] = 1;
+        featureShape[3] = nParts;
+		INDArray features = Nd4j.create(featureShape);
+		// System.out.println("features: " + features);
 		for (int i = 0; i < sentences.size(); i++) {
 			String sentence = sentences.get(i);
 			List<String> tokens = tokenizeSentence(sentence);
@@ -64,13 +65,22 @@ public class SentimentChannel extends Channel {
 				}
 				partScores[partIndex] = partScore;
 			}
-			INDArray vector = Nd4j.create(partScores, featureShape);
+			// System.out.println("partScores: " + Arrays.toString(partScores));
+				
+			INDArray vector = Nd4j.zeros(1,3);
+			for (int j = 0; j < nParts; j++){
+				vector.putScalar(0, j, partScores[j]);
+			}
+			// System.out.println("vector: " + vector);
 			INDArrayIndex[] indices = new INDArrayIndex[4];
 			indices[0] = NDArrayIndex.point(i);
 			indices[1] = NDArrayIndex.point(0);
+			indices[2] = NDArrayIndex.all();
+			indices[3] = NDArrayIndex.all();
 			features.put(indices, vector);
 			
 		}
+		// System.out.println("features: " + features);
 		return new MultiResult(features, null, nParts);
 	}
 	
