@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.deeplearning4j.earlystopping.EarlyStoppingConfiguration;
-import org.deeplearning4j.earlystopping.saver.LocalFileGraphSaver;
 import org.deeplearning4j.earlystopping.termination.MaxEpochsTerminationCondition;
 import org.deeplearning4j.earlystopping.termination.MaxTimeIterationTerminationCondition;
 import org.deeplearning4j.iterator.CnnSentenceDataSetIterator.UnknownWordHandling;
@@ -25,13 +24,13 @@ public class TextCNNEvaluation {
 	private static int batchSize = 32;
 	private static int epochs = 20;
 	private static int maxSentenceLength = 100;
-	
-	private static Channel myChannel = new WordVectorChannel(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb", true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
-	private static Channel googleChannel = new WordVectorChannel(DataHelper.GOOGLE_NEWS_WORD2VEC, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
-	private static Channel gloveChannel = new WordVectorChannel(DataHelper.GLOVE_MEDIUM, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
-	
 			
 	public static void main(String[] args) throws IOException {
+		
+		Channel myChannel = new WordVectorChannel(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb", true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
+		Channel googleChannel = new WordVectorChannel(DataHelper.GOOGLE_NEWS_WORD2VEC, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
+		Channel gloveChannel = new WordVectorChannel(DataHelper.GLOVE_MEDIUM, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
+		
 		List<File> trainFiles = DataHelper.getSarcasmFiles(true);
 		List<File> testFiles = DataHelper.getSarcasmFiles(false);
 		
