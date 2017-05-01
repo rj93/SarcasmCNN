@@ -21,6 +21,8 @@ import org.apache.logging.log4j.Logger;
 import org.deeplearning4j.api.storage.StatsStorage;
 import org.deeplearning4j.earlystopping.EarlyStoppingConfiguration;
 import org.deeplearning4j.earlystopping.EarlyStoppingResult;
+import org.deeplearning4j.earlystopping.saver.LocalFileGraphSaver;
+import org.deeplearning4j.earlystopping.scorecalc.DataSetLossCalculatorCG;
 import org.deeplearning4j.earlystopping.trainer.EarlyStoppingGraphTrainer;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.iterator.LabeledSentenceProvider;
@@ -224,7 +226,7 @@ public class TextCNN {
 		save(dir, "model.bin");
 	}
 	
-	public EarlyStoppingResult<ComputationGraph> train(List<File> trainFiles, EarlyStoppingConfiguration<ComputationGraph> esConf) throws IOException {
+	public EarlyStoppingResult<ComputationGraph> train(List<File> trainFiles, List<File> testFiles, EarlyStoppingConfiguration<ComputationGraph> esConf) throws IOException {
 		
 		logger.info("train - trainFiles: " + trainFiles.size());
 		
@@ -232,12 +234,13 @@ public class TextCNN {
 		new File(dir).mkdirs();
 		
 		MultiDataSetIterator trainIter = getMultiDataSetIterator(trainFiles);
+		MultiDataSetIterator testIter = getMultiDataSetIterator(testFiles);
 		labelsMap = ((CnnSentenceChannelDataSetIterator) trainIter).getLabelsMap();
 		
+		esConf.setScoreCalculator(new DataSetLossCalculatorCG(testIter, true));
+		esConf.setModelSaver(new LocalFileGraphSaver(dir));
 		EarlyStoppingGraphTrainer trainer = new EarlyStoppingGraphTrainer(esConf, model, trainIter, null);
 		EarlyStoppingResult<ComputationGraph> result = trainer.fit();
-        
-        save(dir, "model.bin");
         
         return result;
 	}
