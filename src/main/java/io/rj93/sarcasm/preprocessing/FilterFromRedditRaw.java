@@ -96,8 +96,8 @@ public class FilterFromRedditRaw implements Runnable {
 		int count = 0;
 		try {
 			br = new BufferedReader(new FileReader(inFile));
-//			positiveWriter = new PrintWriter(outPositivePath + inFile.getName(), "UTF-8");
-//			negativeWriter = new PrintWriter(outNegativePath + inFile.getName(), "UTF-8");
+			positiveWriter = new PrintWriter(outPositivePath + inFile.getName(), "UTF-8");
+			negativeWriter = new PrintWriter(outNegativePath + inFile.getName(), "UTF-8");
 			
 			String line;
 		    while ((line = br.readLine()) != null) {
@@ -107,13 +107,13 @@ public class FilterFromRedditRaw implements Runnable {
 		    	
 		    	if (body.endsWith(" /s")){ // body is sarcastic
 		    		sarcasticSizes.add(body.length());
-//		    		positiveWriter.println(line);
+		    		positiveWriter.println(line);
 		    		posCount++;
 		    	} else if (sarcasticSizes.size() > 0){ // search for similar sized non-sarcastic comments
 		    		for (int i = 0; i < sarcasticSizes.size(); i++){
 		    			int size = sarcasticSizes.get(i);
 		    			if (Math.abs(body.length() - size) <= (0.1 * size)){ // compare sizes to be within 10% of each other
-//		    				negativeWriter.println(line);
+		    				negativeWriter.println(line);
 		    				sarcasticSizes.remove(i);
 		    				negCount++;
 		    				break;

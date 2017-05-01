@@ -48,6 +48,7 @@ public class TextCNNEvaluation {
 				.epochTerminationConditions(new MaxEpochsTerminationCondition(30))
 				.iterationTerminationConditions(new MaxTimeIterationTerminationCondition(2, TimeUnit.HOURS))
 		        .evaluateEveryNEpochs(1)
+		        .saveLastModel(true)
 				.build();
 		
 		for (int i = 0; i < channels.size(); i++){
