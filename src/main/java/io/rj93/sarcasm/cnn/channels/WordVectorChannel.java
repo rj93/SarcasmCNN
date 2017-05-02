@@ -43,7 +43,8 @@ public class WordVectorChannel extends Channel {
 	public WordVectorChannel(File wordVectorFile, boolean useNormalizedWordVectors, UnknownWordHandling unknownWordHandling, int maxSentenceLength){
 		this.wordVectorFile = wordVectorFile;
 		this.wordVector = readWordVector(wordVectorFile);
-		size = wordVector.getWordVector(wordVector.vocab().wordAtIndex(0)).length;
+		this.wordVector.setUNK("UNK");
+		this.size = wordVector.getWordVector(wordVector.vocab().wordAtIndex(0)).length;
 		this.useNormalizedWordVectors = useNormalizedWordVectors;
 		this.unknownWordHandling = unknownWordHandling;
 		this.maxSentenceLength = maxSentenceLength;
