@@ -1,3 +1,7 @@
 .container {
 	padding: 2em 3em;
 }
+
+#prediction {
+	padding: 2em;
+}

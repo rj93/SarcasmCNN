@@ -24,6 +24,20 @@
 					<span class="btn btn-primary input-group-addon" id="sentence-text-addon" onclick="predict()">Predict</span>
 				</div>
 			</div>
+
+			<div class="row">
+				<div class="hidden col-md-offset-2" id="prediction">
+					<div class="row">
+						<span id="isSarcarstic"></span>
+					</div>
+					<div class="row">
+						<span>Probability Positive: <span id="pPos"></span></span>
+					</div>
+					<div class="row">
+						<span>Probability Negative: <span id="pNeg"></span></span>
+					</div>
+				</div>
+			</div>
 		</div>
 
 		<script>
@@ -65,6 +79,17 @@
 
 			function update(data) {
 				console.log(data);
+				$("#prediction").removeClass("hidden");
+
+				var text;
+				if (data.sarcastic){
+					text = "Text is sarcastic";
+				} else {
+					text = "Text isn't sarcastic";
+				}
+				$("#isSarcarstic").html(text);
+				$("#pPos").html(data.probabilityPositive);
+				$("#pNeg").html(data.probabilityNegative);
 			}
 		</script>
 
