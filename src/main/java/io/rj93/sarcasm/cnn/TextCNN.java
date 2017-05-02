@@ -242,6 +242,8 @@ public class TextCNN {
 		EarlyStoppingGraphTrainer trainer = new EarlyStoppingGraphTrainer(esConf, model, trainIter, null);
 		EarlyStoppingResult<ComputationGraph> result = trainer.fit();
         
+		model = result.getBestModel();
+		save(dir, "model.bin");
         return result;
 	}
 	
@@ -370,19 +372,20 @@ public class TextCNN {
 		List<Channel> channels = new ArrayList<Channel>();
 //		channels.add(new WordVectorChannel(DataHelper.GOOGLE_NEWS_WORD2VEC, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
 		channels.add(new WordVectorChannel(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb", true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
+		channels.add(new WordVectorChannel(DataHelper.GLOVE, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
 		
 		List<File> trainFiles = DataHelper.getSarcasmFiles(true);
 		List<File> testFiles = DataHelper.getSarcasmFiles(false);
 		
 		try {
-//			TextCNN cnn = new TextCNN(outputs, batchSize, epochs, channels);
-//			cnn.startUIServer();
-//			long start = System.nanoTime();
-//			cnn.train(trainFiles, testFiles);
-//			long diff = System.nanoTime() - start;
-//			logger.info("Total time taken: " + PrettyTime.prettyNano(diff));
-			TextCNN cnn = TextCNN.loadFromDir(DataHelper.MODELS_DIR, "model.bin");
-			cnn.test(testFiles);
+			TextCNN cnn = new TextCNN(outputs, batchSize, epochs, channels);
+			cnn.startUIServer();
+			long start = System.nanoTime();
+			cnn.train(trainFiles, testFiles);
+			long diff = System.nanoTime() - start;
+			logger.info("Total time taken: " + PrettyTime.prettyNano(diff));
+//			TextCNN cnn = TextCNN.loadFromDir(DataHelper.MODELS_DIR, "model.bin");
+//			cnn.test(testFiles);
 		} catch (Exception e){
 			e.printStackTrace();
 		} finally {

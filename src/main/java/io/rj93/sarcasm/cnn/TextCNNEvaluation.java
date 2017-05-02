@@ -29,16 +29,16 @@ public class TextCNNEvaluation {
 		
 		Channel myChannel = new WordVectorChannel(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb", true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
 		Channel googleChannel = new WordVectorChannel(DataHelper.GOOGLE_NEWS_WORD2VEC, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
-		Channel gloveChannel = new WordVectorChannel(DataHelper.GLOVE_MEDIUM, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
+		Channel gloveChannel = new WordVectorChannel(DataHelper.GLOVE, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
 		
 		List<File> trainFiles = DataHelper.getSarcasmFiles(true);
 		List<File> testFiles = DataHelper.getSarcasmFiles(false);
 		
 		List<List<Channel>> channels = new ArrayList<>();
-		channels.add(Arrays.asList(myChannel));
-		channels.add(Arrays.asList(googleChannel));
-		channels.add(Arrays.asList(gloveChannel));
-		channels.add(Arrays.asList(myChannel, googleChannel));
+//		channels.add(Arrays.asList(myChannel));
+//		channels.add(Arrays.asList(googleChannel));
+//		channels.add(Arrays.asList(gloveChannel));
+//		channels.add(Arrays.asList(myChannel, googleChannel));
 		channels.add(Arrays.asList(myChannel, gloveChannel));
 		channels.add(Arrays.asList(googleChannel, gloveChannel));
 		channels.add(Arrays.asList(myChannel, googleChannel, gloveChannel));
