@@ -17,14 +17,17 @@
 	<body onload="init()">
 
 		<div class="container">
-			<div class="input-group">
-				<input type="text" class="form-control" placeholder="Sentence" id="sentence-text" aria-describedby="sentence-text-addon">
-				<span class="btn btn-primary input-group-addon" id="sentence-text-addon" onclick="predict()">Predict</span>
+			<h1>Sarcasm Detector</h1>
+			<div class="row">
+				<div class="input-group col-md-8 col-md-offset-2">
+					<input type="text" class="form-control" placeholder="Sentence" id="sentence-text" aria-describedby="sentence-text-addon">
+					<span class="btn btn-primary input-group-addon" id="sentence-text-addon" onclick="predict()">Predict</span>
+				</div>
 			</div>
 		</div>
 
 		<script>
-			var baseUrl = "http://localhost:8080/api/";
+			var baseUrl = "http://richardjones.io:8080/api/";
 
 			function init(){
 				$.ajax({
@@ -47,8 +50,8 @@
 				if (sentence.length > 0){
 					$.ajax({
 						type: "GET",
-						url: baseUrl + "predict/this%20is%20a%20test",
-						data: sentence,
+						url: baseUrl + "predict/" + JSON.stringify(sentence),
+						data: { 'sentence' : sentence },
 						success: function(data) {
 							update(data); 
 						}, error: function(jqXHR, textStatus, errorThrown) {
@@ -61,7 +64,7 @@
 			}
 
 			function update(data) {
-				
+				console.log(data);
 			}
 		</script>
 
