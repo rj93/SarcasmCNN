@@ -53,13 +53,13 @@ private static final int seed = 100;
 			labels.add("negative");
 		}
 		
-		wordVector1 = WordVectorSerializer.loadStaticModel(new File(DataHelper.GLOVE_SMALL));
+		wordVector1 = WordVectorSerializer.loadStaticModel(new File(DataHelper.GLOVE));
 		wordVector1.setUNK("UNK");
-		wordVector2 = WordVectorSerializer.loadStaticModel(new File(DataHelper.GLOVE_MEDIUM));
+		wordVector2 = WordVectorSerializer.loadStaticModel(new File(DataHelper.GOOGLE_NEWS_WORD2VEC));
 		wordVector2.setUNK("UNK");
 		
-		channel1 = new WordVectorChannel(DataHelper.GLOVE_SMALL, false, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
-		channel2 = new WordVectorChannel(DataHelper.GLOVE_MEDIUM, false, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
+		channel1 = new WordVectorChannel(DataHelper.GLOVE, false, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
+		channel2 = new WordVectorChannel(DataHelper.GOOGLE_NEWS_WORD2VEC, false, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
 	}
 	
 	@Test
