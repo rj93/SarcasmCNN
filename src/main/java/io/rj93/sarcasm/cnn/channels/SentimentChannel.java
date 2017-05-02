@@ -43,14 +43,13 @@ public class SentimentChannel extends Channel {
 	@Override
 	public MultiResult getFeatureVectors(List<String> sentences) {
 		
-//		int[] featureShape = new int[]{sentences.size(), nParts};
 		int[] featureShape = new int[4];
         featureShape[0] = sentences.size();
         featureShape[1] = 1;
         featureShape[2] = nParts;
         featureShape[3] = 1;
 		INDArray features = Nd4j.create(featureShape);
-		// System.out.println("features: " + features);
+
 		for (int i = 0; i < sentences.size(); i++) {
 			String sentence = sentences.get(i);
 			List<String> tokens = tokenizeSentence(sentence);
@@ -78,13 +77,12 @@ public class SentimentChannel extends Channel {
 				}
 				partScores[partIndex] = partScore;
 			}
-			// System.out.println("partScores: " + Arrays.toString(partScores));
 				
 			INDArray vector = Nd4j.zeros(1,3);
 			for (int j = 0; j < nParts; j++){
 				vector.putScalar(0, j, partScores[j]);
 			}
-			// System.out.println("vector: " + vector);
+
 			INDArrayIndex[] indices = new INDArrayIndex[4];
 			indices[0] = NDArrayIndex.point(i);
 			indices[1] = NDArrayIndex.point(0);
@@ -93,12 +91,11 @@ public class SentimentChannel extends Channel {
 			features.put(indices, vector);
 			
 		}
-		// System.out.println("features: " + features);
+
 		return new MultiResult(features, null, nParts);
 	}
 	
 	private double getSentimentScore(String word){
-		// TODO
 		double score = 0;
 	    if(dictionay.get(word+"#n") != null)
 	    	score = dictionay.get(word+"#n") + score;
