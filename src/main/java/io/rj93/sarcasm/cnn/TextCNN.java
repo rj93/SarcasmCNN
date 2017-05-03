@@ -53,6 +53,7 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 import io.rj93.sarcasm.cnn.channels.Channel;
 import io.rj93.sarcasm.cnn.channels.WordVectorChannel;
 import io.rj93.sarcasm.iterators.CnnSentenceChannelDataSetIterator;
+import io.rj93.sarcasm.preprocessing.TextPreProcessor;
 import io.rj93.sarcasm.utils.DataHelper;
 import io.rj93.sarcasm.utils.PrettyTime;
 
@@ -158,6 +159,17 @@ public class TextCNN {
 			.build();
 	}
 	
+	private MultiDataSetIterator getMultiDataSetIterator(Map<String, String> map){
+		List<String> sentences = new ArrayList<String>();
+		List<String> labels = new ArrayList<String>();
+		for (Entry<String, String> entry : map.entrySet()){
+			sentences.add(entry.getKey());
+			labels.add(entry.getValue());
+		}
+		
+		return getMultiDataSetIterator(sentences, labels);
+	}
+	
 	private MultiDataSetIterator getMultiDataSetIterator(List<File> files) throws FileNotFoundException {
 		
 		List<String> sentences = new ArrayList<String>();
@@ -188,6 +200,10 @@ public class TextCNN {
 		}
 		
 		logger.info("No. positive: " + posCount + ", No. negative: " + negCount);
+		return getMultiDataSetIterator(sentences, labels);
+	}
+	
+	private MultiDataSetIterator getMultiDataSetIterator(List<String> sentences, List<String> labels){
 		LabeledSentenceProvider sentenceProvider = new CollectionLabeledSentenceProvider(sentences, labels, new Random(seed));
 		
 		MultiDataSetIterator iter = new CnnSentenceChannelDataSetIterator.Builder()
@@ -199,11 +215,27 @@ public class TextCNN {
 		return iter;
 	}
 	
+	public void train(Map<String, String> trainMap, Map<String, String> testMap) throws IOException{
+		
+		logger.info("train - trainMap: " + trainMap.size() + ", testMap: " + testMap.size());
+		
+		MultiDataSetIterator trainIter = getMultiDataSetIterator(trainMap);
+		MultiDataSetIterator testIter = getMultiDataSetIterator(testMap);
+		
+		train(trainIter, testIter);
+	}
+	
 	public void train(List<File> trainFiles, List<File> testFiles) throws IOException {
 		
 		logger.info("train - trainFiles: " + trainFiles.size() + ", testFiles: " + testFiles.size());
 		
 		MultiDataSetIterator trainIter = getMultiDataSetIterator(trainFiles);
+		MultiDataSetIterator testIter = getMultiDataSetIterator(testFiles);
+		
+		train(trainIter, testIter);
+	}
+	
+	private void train(MultiDataSetIterator trainIter, MultiDataSetIterator testIter) throws IOException{
 		labelsMap = ((CnnSentenceChannelDataSetIterator) trainIter).getLabelsMap();
 		
 		logger.info("Training Model...");
@@ -215,7 +247,7 @@ public class TextCNN {
 			long diff = System.nanoTime() - start;
 			logger.info("Epoch " + i + " complete in " + PrettyTime.prettyNano(diff) + ". Starting evaluation...");
 			
-			Evaluation evaluation = test(testFiles);            
+			Evaluation evaluation = test(testIter);            
             logger.info(evaluation.stats());
             
             trainIter.reset();
@@ -226,18 +258,34 @@ public class TextCNN {
 		save(dir, "model.bin");
 	}
 	
+	public EarlyStoppingResult<ComputationGraph> train(Map<String, String> trainMap, Map<String, String> testMap, EarlyStoppingConfiguration<ComputationGraph> esConf) throws IOException {
+		String dir = getModelSaveDir();
+		new File(dir).mkdirs();
+		
+		MultiDataSetIterator trainIter = getMultiDataSetIterator(trainMap);
+		MultiDataSetIterator testIter = getMultiDataSetIterator(testMap);
+
+		return train(trainIter, testIter, esConf);
+	}
+	
 	public EarlyStoppingResult<ComputationGraph> train(List<File> trainFiles, List<File> testFiles, EarlyStoppingConfiguration<ComputationGraph> esConf) throws IOException {
-		
-		logger.info("train - trainFiles: " + trainFiles.size());
-		
 		String dir = getModelSaveDir();
 		new File(dir).mkdirs();
 		
 		MultiDataSetIterator trainIter = getMultiDataSetIterator(trainFiles);
 		MultiDataSetIterator testIter = getMultiDataSetIterator(testFiles);
+
+		return train(trainIter, testIter, esConf);
+	}
+	
+	private EarlyStoppingResult<ComputationGraph> train(MultiDataSetIterator trainIter, MultiDataSetIterator testIter, EarlyStoppingConfiguration<ComputationGraph> esConf) throws IOException {
+		
+		String dir = getModelSaveDir();
+		new File(dir).mkdirs();
+		
 		labelsMap = ((CnnSentenceChannelDataSetIterator) trainIter).getLabelsMap();
 		
-		esConf.setScoreCalculator(new DataSetLossCalculatorCG(testIter, true));
+		esConf.setScoreCalculator(new DataSetLossCalculatorCG(testIter, false));
 		esConf.setModelSaver(new LocalFileGraphSaver(dir));
 		EarlyStoppingGraphTrainer trainer = new EarlyStoppingGraphTrainer(esConf, model, trainIter, null);
 		EarlyStoppingResult<ComputationGraph> result = trainer.fit();
@@ -325,10 +373,12 @@ public class TextCNN {
 	}
 	
 	public Prediction predict(String sentence){
+		TextPreProcessor preprocessor = new TextPreProcessor(true, false);
+		String preProcessed = preprocessor.preProcess(sentence);
 		
 		INDArray[] features = new INDArray[nChannels];
 		for (int channel = 0; channel < nChannels; channel++){
-			features[channel] = channels.get(channel).getFeatureVector(sentence);
+			features[channel] = channels.get(channel).getFeatureVector(preProcessed);
 		}
 		INDArray result = model.outputSingle(features);
 		
@@ -339,6 +389,10 @@ public class TextCNN {
 	public Evaluation test(List<File> testFiles) throws FileNotFoundException {
 		MultiDataSetIterator testIter = getMultiDataSetIterator(testFiles);
 		
+		return test(testIter);
+	}
+	
+	private Evaluation test(MultiDataSetIterator testIter){
 		logger.info("Starting evaluation...");
 		long start = System.nanoTime();
 		ComputationGraph graph = (ComputationGraph) model;

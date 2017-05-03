@@ -1,5 +1,6 @@
 package io.rj93.sarcasm.utils;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
@@ -8,21 +9,15 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.filefilter.FileFileFilter;
-import org.apache.commons.io.filefilter.FileFilterUtils;
-
 import com.opencsv.CSVReader;
-import com.opencsv.CSVWriter;
 
+import io.rj93.sarcasm.preprocessing.TextPreProcessor;
 import io.rj93.sarcasm.utils.filters.TestFileFilter;
 import io.rj93.sarcasm.utils.filters.TrainFileFilter;
 
@@ -125,20 +120,47 @@ public class DataHelper {
 	
 	public static Map<String, String> getRedditCompDataSet(boolean train) throws IOException {
 		
+		TextPreProcessor preProcessor = new TextPreProcessor(true, false);
+		
 		Map<String, String> data = new HashMap<String, String>();
 		File f;
 		if (train)
 			f = new File(REDDIT_COMP_DIR + "reddit_training.csv");
 		else 
 			f = new File(REDDIT_COMP_DIR + "reddit_test_fixed.csv");
-		
-		CSVReader reader = new CSVReader(new FileReader(f));
-	    String [] nextLine;
-	    while ((nextLine = reader.readNext()) != null) {
-	    	String s = nextLine[1];
-	    	String label = (nextLine[10] == "yes") ? "positive" : "negative";
-	    	data.put(s, label);
+
+		// Can't use CSVReader as the comment's in the training datset messes it up 
+		BufferedReader reader = new BufferedReader(new FileReader(f));
+		String line;
+		String s = "";
+		reader.readLine();
+	    while ((line = reader.readLine()) != null) {
+	    	try {
+	    		Integer.valueOf(line.split(",")[0]);
+	    		
+	    		String[] parts = s.split(",");
+	    		String comment = parts[1];
+	    		for (int i = 2; i < parts.length - 9; i++){
+	    			comment += parts[i];
+	    		}
+	    		
+	    		comment = preProcessor.preProcess(comment);
+	    		if (comment != null && comment.length() > 0){
+		    		if (parts[parts.length-1].equals("yes")){
+		    			data.put(comment, "positive");
+		    		} else if (parts[parts.length-1].equals("no")){
+		    			data.put(comment, "negative");
+		    		} else {
+		    			System.err.println("last part does not match label");
+		    		}
+	    		}
+	    		
+	    		s = line;
+	    	} catch (Exception e){
+	    		s += line;
+	    	}
 	    }
+	    reader.close();
 	    
 		return data;
 	}
@@ -181,5 +203,5 @@ public class DataHelper {
 	    reader.close();
 	    writer.close();
 	}
-
+	
 }

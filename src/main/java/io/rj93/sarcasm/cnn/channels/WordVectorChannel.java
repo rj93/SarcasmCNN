@@ -24,7 +24,7 @@ public class WordVectorChannel extends Channel {
 	Logger logger = LogManager.getLogger(WordVectorChannel.class);
 	
 	public static final String TYPE = "WordVectorChannel";
-	private static final String UNKNOWN_WORD_SENTINEL = "UNKNOWN_WORD_SENTINEL";
+	private static final String UNKNOWN_WORD_SENTINEL = "UNK";
 	
 	private final File wordVectorFile;
 	private final WordVectors wordVector;
@@ -73,7 +73,7 @@ public class WordVectorChannel extends Channel {
         int minLength = Integer.MAX_VALUE; //Track to we know if we can skip mask creation for "all same length" case
         for (int i = 0; i < sentences.size(); i++) {
             List<String> tokens = tokenizeSentence(sentences.get(i));
-
+            
             maxLength = Math.max(maxLength, tokens.size());
             tokenizedSentences.add(tokens);
         }
