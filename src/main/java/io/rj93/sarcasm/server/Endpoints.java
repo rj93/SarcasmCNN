@@ -4,10 +4,8 @@ import java.io.IOException;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -39,12 +37,6 @@ private static Logger logger = LogManager.getLogger(Endpoints.class);
 			logger.fatal("CNN wasn't able to initialise");
 		}
 		return cnn;
-	}
-	
-	@GET
-	@Path("init/")
-	public Response init(){
-		return Response.ok("").build();
 	}
 	
 	@POST
