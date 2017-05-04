@@ -14,7 +14,7 @@
 		<title>Sarcasm Detector</title>
 	</head>
 
-	<body onload="init()">
+	<body>
 
 		<div class="container">
 			<h1>Sarcasm Detector</h1>
@@ -41,19 +41,7 @@
 		</div>
 
 		<script>
-			var baseUrl = "http://plex.richardjones.io:8080/api/";
-
-			function init(){
-				$.ajax({
-					type: "GET",
-					url: baseUrl + "init",
-					success: function(data) {
-						console.log("Success");
-					}, error: function(jqXHR, textStatus, errorThrown) {
-						console.log(errorThrown); 
-					}
-				});
-			}
+			var baseUrl = "http://localhost:8080/api/";
 
 			function predict(){
 
@@ -63,8 +51,8 @@
 
 				if (sentence.length > 0){
 					$.ajax({
-						type: "GET",
-						url: baseUrl + "predict/" + JSON.stringify(sentence),
+						type: "POST",
+						url: baseUrl + "predict/",
 						data: { 'sentence' : sentence },
 						success: function(data) {
 							update(data); 
