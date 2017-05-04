@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import com.opencsv.CSVReader;
 
@@ -34,6 +35,7 @@ public class DataHelper {
 	public final static String WORD2VEC_DIR = DATA_DIR + "word2vec/";
 	public final static String MODELS_DIR = DATA_DIR + "models/";
 	public final static String REDDIT_COMP_DIR = DATA_DIR + "extra_data/reddit_competition/";
+	public final static String SARCASMV2_FILE = DATA_DIR + "extra_data/NL&DS/sarcasm_v2.csv";
 	
 	
 	public final static String GOOGLE_NEWS_WORD2VEC = WORD2VEC_DIR + "google/GoogleNews-vectors-negative300.bin";
@@ -121,6 +123,28 @@ public class DataHelper {
 			return DataHelper.getFilesFromDir(dir, new TrainFileFilter(2), true);
 		else 
 			return DataHelper.getFilesFromDir(dir, new TestFileFilter(2), true);
+	}
+	
+	public static Map<String, String> getSarcsasmV2Dataset(boolean train) throws IOException {
+		
+		TextPreProcessor preProcessor = new TextPreProcessor(false, false);
+		Map<String, String> data = new HashMap<String, String>();
+		
+		CSVReader reader = new CSVReader(new FileReader(SARCASMV2_FILE));
+		String[] nextLine;
+		Random r = new Random(12345);
+	    while ((nextLine = reader.readNext()) != null) {
+	    	double val = r.nextDouble();
+			String comment = preProcessor.preProcess(nextLine[3]);
+			String label = nextLine[1].equals("sarc") ? "positive" : "negative";
+	    	if (train && val <= 0.8){
+	    		data.put(comment, label);
+	    	} else if (!train && val > 0.8){
+	    		data.put(comment, label);
+	    	}
+	    }
+	    reader.close();
+		return data;
 	}
 	
 	public static Map<String, String> getRedditCompDataSet(boolean train) throws IOException {
