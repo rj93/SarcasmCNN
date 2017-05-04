@@ -2,7 +2,10 @@ package io.rj93.sarcasm.server;
 
 import java.io.IOException;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -44,10 +47,11 @@ private static Logger logger = LogManager.getLogger(Endpoints.class);
 		return Response.ok("").build();
 	}
 	
-	@GET
+	@POST
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path("predict/{sentence}")
-	public Response predict(@PathParam("sentence") String sentence){
+	@Path("predict/")
+	public Response predict(@FormParam("sentence") String sentence){
 		logger.info("Predict: " + sentence);
 		
 		Response response = null;
@@ -55,12 +59,12 @@ private static Logger logger = LogManager.getLogger(Endpoints.class);
 		if (cnn != null){
 			try {
 				Prediction p = cnn.predict(sentence);
-				logger.info(p.isPositive());
+				
 				JSONObject json = new JSONObject();
 				json.put("sarcastic", p.isPositive());
 				json.put("probabilityPositive", p.getProbabilityPositive());
 				json.put("probabilityNegative", p.getProbabilityNegative());
-				logger.info(json.toString(4));
+
 				response = Response.ok(json.toString(), MediaType.APPLICATION_JSON).build();
 			} catch (Exception e) {
 				e.printStackTrace();

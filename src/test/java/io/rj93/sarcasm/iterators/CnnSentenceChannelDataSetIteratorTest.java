@@ -26,7 +26,7 @@ import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 
 import io.rj93.sarcasm.cnn.channels.Channel;
 import io.rj93.sarcasm.cnn.channels.WordVectorChannel;
-import io.rj93.sarcasm.iterators.CnnSentenceChannelDataSetIterator;
+import io.rj93.sarcasm.iterators.ChannelDataSetIterator;
 import io.rj93.sarcasm.utils.DataHelper;
 
 public class CnnSentenceChannelDataSetIteratorTest {
@@ -114,7 +114,7 @@ private static final int seed = 100;
 	public void loadSingleSentenceTest(){
 		CnnSentenceDataSetIterator dsi1 = (CnnSentenceDataSetIterator) getDataSetIterator(sentences, labels, maxSentenceLength, batchSize, wordVector1);
 		CnnSentenceDataSetIterator dsi2 = (CnnSentenceDataSetIterator) getDataSetIterator(sentences, labels, maxSentenceLength, batchSize, wordVector2);
-		CnnSentenceChannelDataSetIterator mdsi = (CnnSentenceChannelDataSetIterator) getMultiDataSetIterator(sentences, labels, batchSize, channel1, channel2);
+		ChannelDataSetIterator mdsi = (ChannelDataSetIterator) getMultiDataSetIterator(sentences, labels, batchSize, channel1, channel2);
 		
 		for (String s : sentences){
 			
@@ -147,7 +147,7 @@ private static final int seed = 100;
 		
 		LabeledSentenceProvider sentenceProvider = new CollectionLabeledSentenceProvider(sentences, labels, new Random(seed));
 		
-		MultiDataSetIterator iter = new CnnSentenceChannelDataSetIterator.Builder()
+		MultiDataSetIterator iter = new ChannelDataSetIterator.Builder()
 				.sentenceProvider(sentenceProvider)
                 .wordVectors(Arrays.asList(channels))
                 .minibatchSize(batchSize)

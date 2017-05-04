@@ -20,9 +20,9 @@ import io.rj93.sarcasm.cnn.channels.Channel;
 import io.rj93.sarcasm.cnn.channels.MultiResult;
 
 @SuppressWarnings("serial")
-public class CnnSentenceChannelDataSetIterator implements MultiDataSetIterator {
+public class ChannelDataSetIterator implements MultiDataSetIterator {
 	
-	private static final Logger logger = LogManager.getLogger(CnnSentenceChannelDataSetIterator.class);
+	private static final Logger logger = LogManager.getLogger(ChannelDataSetIterator.class);
 
     private LabeledSentenceProvider sentenceProvider = null;
     private List<Channel> channels;
@@ -34,7 +34,7 @@ public class CnnSentenceChannelDataSetIterator implements MultiDataSetIterator {
     private int numClasses;
     private Map<String, Integer> labelClassMap;
 	
-	public CnnSentenceChannelDataSetIterator(Builder builder) {
+	public ChannelDataSetIterator(Builder builder) {
 		this.sentenceProvider = builder.sentenceProvider;
         this.channels = builder.channels;
         this.minibatchSize = builder.minibatchSize;
@@ -197,13 +197,13 @@ public class CnnSentenceChannelDataSetIterator implements MultiDataSetIterator {
             return this;
         }
 
-        public CnnSentenceChannelDataSetIterator build() {
+        public ChannelDataSetIterator build() {
             if (channels == null || channels.size() == 0) {
                 throw new IllegalStateException(
                                 "Cannot build CnnSentenceDataSetIterator without any channels");
             }
 
-            return new CnnSentenceChannelDataSetIterator(this);
+            return new ChannelDataSetIterator(this);
         }
 
         

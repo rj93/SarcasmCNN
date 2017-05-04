@@ -52,7 +52,7 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 
 import io.rj93.sarcasm.cnn.channels.Channel;
 import io.rj93.sarcasm.cnn.channels.WordVectorChannel;
-import io.rj93.sarcasm.iterators.CnnSentenceChannelDataSetIterator;
+import io.rj93.sarcasm.iterators.ChannelDataSetIterator;
 import io.rj93.sarcasm.preprocessing.TextPreProcessor;
 import io.rj93.sarcasm.utils.DataHelper;
 import io.rj93.sarcasm.utils.PrettyTime;
@@ -206,7 +206,7 @@ public class TextCNN {
 	private MultiDataSetIterator getMultiDataSetIterator(List<String> sentences, List<String> labels){
 		LabeledSentenceProvider sentenceProvider = new CollectionLabeledSentenceProvider(sentences, labels, new Random(seed));
 		
-		MultiDataSetIterator iter = new CnnSentenceChannelDataSetIterator.Builder()
+		MultiDataSetIterator iter = new ChannelDataSetIterator.Builder()
         		.sentenceProvider(sentenceProvider)
                 .wordVectors(channels)
                 .minibatchSize(batchSize)
@@ -236,7 +236,7 @@ public class TextCNN {
 	}
 	
 	private void train(MultiDataSetIterator trainIter, MultiDataSetIterator testIter) throws IOException{
-		labelsMap = ((CnnSentenceChannelDataSetIterator) trainIter).getLabelsMap();
+		labelsMap = ((ChannelDataSetIterator) trainIter).getLabelsMap();
 		
 		logger.info("Training Model...");
 		for (int i = 0; i < nEpochs; i++){
@@ -283,7 +283,7 @@ public class TextCNN {
 		String dir = getModelSaveDir();
 		new File(dir).mkdirs();
 		
-		labelsMap = ((CnnSentenceChannelDataSetIterator) trainIter).getLabelsMap();
+		labelsMap = ((ChannelDataSetIterator) trainIter).getLabelsMap();
 		
 		esConf.setScoreCalculator(new DataSetLossCalculatorCG(testIter, false));
 		esConf.setModelSaver(new LocalFileGraphSaver(dir));
@@ -373,7 +373,7 @@ public class TextCNN {
 	}
 	
 	public Prediction predict(String sentence){
-		TextPreProcessor preprocessor = new TextPreProcessor(true, false);
+		TextPreProcessor preprocessor = new TextPreProcessor(false, false);
 		String preProcessed = preprocessor.preProcess(sentence);
 		
 		INDArray[] features = new INDArray[nChannels];
