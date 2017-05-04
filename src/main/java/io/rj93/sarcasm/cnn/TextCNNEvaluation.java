@@ -12,6 +12,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.deeplearning4j.earlystopping.EarlyStoppingConfiguration;
 import org.deeplearning4j.earlystopping.termination.MaxEpochsTerminationCondition;
 import org.deeplearning4j.earlystopping.termination.MaxTimeIterationTerminationCondition;
+import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.iterator.CnnSentenceDataSetIterator.UnknownWordHandling;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.iq80.leveldb.util.FileUtils;
@@ -30,18 +31,19 @@ public class TextCNNEvaluation {
 	
 	public static void main(String[] args) throws IOException {
 //		buildModels();
+//		buildAndTestStemmedModel();
 //		testModels();
 		testRedditComp();
 	}
 	
 	public static void buildModels() throws IOException {
 		
-		Channel myChannel = new WordVectorChannel(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb", true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
+		Channel myChannel = new WordVectorChannel(DataHelper.WORD2VEC_DIR + "all-preprocessed-300.emb", true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
 		Channel googleChannel = new WordVectorChannel(DataHelper.GOOGLE_NEWS_WORD2VEC, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
 		Channel gloveChannel = new WordVectorChannel(DataHelper.GLOVE, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
 		
-		List<File> trainFiles = DataHelper.getSarcasmFiles(true);
-		List<File> testFiles = DataHelper.getSarcasmFiles(false);
+		List<File> trainFiles = DataHelper.getSarcasmFiles(true, false);
+		List<File> testFiles = DataHelper.getSarcasmFiles(false, false);
 		
 		List<List<Channel>> channels = new ArrayList<>();
 		channels.add(Arrays.asList(myChannel));
@@ -54,7 +56,7 @@ public class TextCNNEvaluation {
 		
 		EarlyStoppingConfiguration<ComputationGraph> esConf = new EarlyStoppingConfiguration.Builder<ComputationGraph>()
 				.epochTerminationConditions(new MaxEpochsTerminationCondition(30))
-				.iterationTerminationConditions(new MaxTimeIterationTerminationCondition(2, TimeUnit.HOURS))
+				.iterationTerminationConditions(new MaxTimeIterationTerminationCondition(1, TimeUnit.DAYS))
 		        .evaluateEveryNEpochs(1)
 		        .saveLastModel(true)
 				.build();
@@ -67,12 +69,37 @@ public class TextCNNEvaluation {
 			cnn.train(trainFiles, testFiles, esConf);
 			long diff = System.nanoTime() - start;
 			System.out.println("Total time taken: " + PrettyTime.prettyNano(diff));
+			
+			Evaluation eval = cnn.test(testFiles);
+			System.out.println(eval.stats());
 		}
 		
 	}
 	
+	public static void buildAndTestStemmedModel() throws IOException {
+		Channel myChannelStemmed = new WordVectorChannel(DataHelper.WORD2VEC_DIR + "all-preprocessed-stemmed-300.emb", true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
+		List<File> trainFiles = DataHelper.getSarcasmFiles(true, true);
+		List<File> testFiles = DataHelper.getSarcasmFiles(false, true);
+		
+		EarlyStoppingConfiguration<ComputationGraph> esConf = new EarlyStoppingConfiguration.Builder<ComputationGraph>()
+				.epochTerminationConditions(new MaxEpochsTerminationCondition(30))
+				.iterationTerminationConditions(new MaxTimeIterationTerminationCondition(1, TimeUnit.DAYS))
+		        .evaluateEveryNEpochs(1)
+		        .saveLastModel(true)
+				.build();
+		
+		TextCNN cnn = new TextCNN(outputs, batchSize, epochs, Arrays.asList(myChannelStemmed));
+		long start = System.nanoTime();
+		cnn.train(trainFiles, testFiles, esConf);
+		long diff = System.nanoTime() - start;
+		System.out.println("Total time taken: " + PrettyTime.prettyNano(diff));
+		
+		Evaluation eval = cnn.test(testFiles);
+		System.out.println(eval.stats());
+	}
+	
 	public static void testModels() throws IOException {
-		List<File> testFiles = DataHelper.getSarcasmFiles(false);
+		List<File> testFiles = DataHelper.getSarcasmFiles(false, false);
 		
 		List<File> files = FileUtils.listFiles(new File(DataHelper.MODELS_DIR));
 		for (File f : files){

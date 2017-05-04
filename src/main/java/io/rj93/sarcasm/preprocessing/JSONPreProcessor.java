@@ -14,8 +14,14 @@ public class JSONPreProcessor extends TextPreProcessor {
 	}
 
 	public String preProcess(String json) {
-		JSONObject comment = new JSONObject(json);
-		return super.preProcess(comment.getString("body"));
+		try {
+			JSONObject comment = new JSONObject(json);
+			return super.preProcess(comment.getString("body"));
+		} catch (Exception e){
+			e.printStackTrace();
+			System.err.println(json);
+		}
+		return "";
 	}
 
 }

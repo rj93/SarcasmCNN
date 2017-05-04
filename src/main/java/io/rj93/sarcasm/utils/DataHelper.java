@@ -110,8 +110,13 @@ public class DataHelper {
 		System.out.println("Skipped " + count + " files");
 	}
 	
-	public static List<File> getSarcasmFiles(boolean training) throws FileNotFoundException{
-		File dir = new File(DataHelper.PREPROCESSED_DATA_DIR + "2015-quick");
+	public static List<File> getSarcasmFiles(boolean training, boolean stemmed) throws FileNotFoundException{
+		File dir;
+		if (stemmed)
+			dir = new File(DataHelper.PREPROCESSED_DATA_STEMMED_DIR);
+		else 
+			dir = new File(DataHelper.PREPROCESSED_DATA_DIR);
+		
 		if (training)
 			return DataHelper.getFilesFromDir(dir, new TrainFileFilter(2), true);
 		else 

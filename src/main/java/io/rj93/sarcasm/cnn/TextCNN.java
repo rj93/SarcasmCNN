@@ -285,7 +285,7 @@ public class TextCNN {
 		
 		labelsMap = ((ChannelDataSetIterator) trainIter).getLabelsMap();
 		
-		esConf.setScoreCalculator(new DataSetLossCalculatorCG(testIter, false));
+		esConf.setScoreCalculator(new DataSetLossCalculatorCG(testIter, true));
 		esConf.setModelSaver(new LocalFileGraphSaver(dir));
 		EarlyStoppingGraphTrainer trainer = new EarlyStoppingGraphTrainer(esConf, model, trainIter, null);
 		EarlyStoppingResult<ComputationGraph> result = trainer.fit();
@@ -428,8 +428,8 @@ public class TextCNN {
 		channels.add(new WordVectorChannel(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb", true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
 		channels.add(new WordVectorChannel(DataHelper.GLOVE, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
 		
-		List<File> trainFiles = DataHelper.getSarcasmFiles(true);
-		List<File> testFiles = DataHelper.getSarcasmFiles(false);
+		List<File> trainFiles = DataHelper.getSarcasmFiles(true, false);
+		List<File> testFiles = DataHelper.getSarcasmFiles(false, false);
 		
 		try {
 			TextCNN cnn = new TextCNN(outputs, batchSize, epochs, channels);

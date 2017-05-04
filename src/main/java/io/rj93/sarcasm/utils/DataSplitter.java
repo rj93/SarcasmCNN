@@ -116,9 +116,10 @@ public class DataSplitter {
 
 				List<File> files = FileUtils.listFiles(new File(year.getAbsolutePath() + "/" + Class));
 				for (File f : files){
+					System.out.println(f.getAbsolutePath());
 					List<String> processedStrings = new ArrayList<String>();
 					FileSentenceIterator iter = new FileSentenceIterator(f);
-					iter.setPreProcessor(new JSONPreProcessor(false, false));
+					iter.setPreProcessor(new JSONPreProcessor(false, true));
 					while (iter.hasNext()){
 						String s = iter.nextSentence();
 //							System.out.println(s);
@@ -138,7 +139,7 @@ public class DataSplitter {
 					float valPer = val.size() / totalSize;
 					float testPer = test.size() / totalSize;
 					
-					String outDir = DataHelper.PREPROCESSED_DATA_DIR + year.getName() + "/";
+					String outDir = DataHelper.PREPROCESSED_DATA_STEMMED_DIR + year.getName() + "/";
 					System.out.println(String.format("train = %f, val = %f, test = %f, dir = %s", trainPer, valPer, testPer, year.getName() + "/" +Class));
 					
 					int minSize = 2;

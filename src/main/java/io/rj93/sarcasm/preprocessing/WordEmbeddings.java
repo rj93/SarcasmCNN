@@ -26,10 +26,10 @@ public class WordEmbeddings {
 	
 	public static void main(String[] args) throws Exception{
 		
-		File dir = new File(DataHelper.PREPROCESSED_DATA_DIR + "/2014");
+		File dir = new File(DataHelper.PREPROCESSED_DATA_STEMMED_DIR);
 		List<File> files = DataHelper.getFilesFromDir(dir, new TrainFileFilter(2), true);
 		files.addAll(DataHelper.getFilesFromDir(dir, new TestFileFilter(2), true));
-		trainWord2Vec(files, false);
+		trainWord2Vec(files, true);
 		
 //		compareEmbeddings();
 		
@@ -62,8 +62,7 @@ public class WordEmbeddings {
 
         System.out.println(vec.getWordVectorMatrix("like"));
         if (save)
-        	WordVectorSerializer.writeWord2VecModel(vec, DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb");
-		
+        	WordVectorSerializer.writeWord2VecModel(vec, DataHelper.WORD2VEC_DIR + "all-preprocessed-stemmed-300.emb");
 		
 		System.out.println("Closest Words: ");
         Collection<String> lst = vec.wordsNearest("like", 10);
