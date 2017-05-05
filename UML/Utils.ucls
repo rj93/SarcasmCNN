@@ -1,47 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <class-diagram version="1.2.0" icons="true" automaticImage="PNG" always-add-relationships="false" generalizations="true" 
   realizations="true" associations="true" dependencies="false" nesting-relationships="true" router="FAN">  
-  <class id="1" language="java" name="io.rj93.sarcasm.utils.PrettyTime" project="sarcasm" 
-    file="/sarcasm/src/main/java/io/rj93/sarcasm/utils/PrettyTime.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="160" y="98"/>    
+  <class id="1" language="java" name="io.rj93.sarcasm.utils.PrettyTime" project="JSarcasmCNN" 
+    file="/JSarcasmCNN/src/main/java/io/rj93/sarcasm/utils/PrettyTime.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="170" y="98"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="2" language="java" name="io.rj93.sarcasm.utils.DataHelper" project="sarcasm" 
-    file="/sarcasm/src/main/java/io/rj93/sarcasm/utils/DataHelper.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="508" y="269"/>    
+  <class id="2" language="java" name="io.rj93.sarcasm.utils.DataHelper" project="JSarcasmCNN" 
+    file="/JSarcasmCNN/src/main/java/io/rj93/sarcasm/utils/DataHelper.java" binary="false" corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="473" y="269"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="3" language="java" name="io.rj93.sarcasm.utils.filters.TrainOrTestFileFilter" project="sarcasm" 
-    file="/sarcasm/src/main/java/io/rj93/sarcasm/utils/filters/TrainOrTestFileFilter.java" binary="false" 
+  <class id="3" language="java" name="io.rj93.sarcasm.utils.filters.TestFileFilter" project="JSarcasmCNN" 
+    file="/JSarcasmCNN/src/main/java/io/rj93/sarcasm/utils/filters/TestFileFilter.java" binary="false" 
     corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="163" y="268"/>    
+    <position height="-1" width="-1" x="76" y="459"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="4" language="java" name="io.rj93.sarcasm.utils.filters.TrainFileFilter" project="sarcasm" 
-    file="/sarcasm/src/main/java/io/rj93/sarcasm/utils/filters/TrainFileFilter.java" binary="false" 
+  <class id="4" language="java" name="io.rj93.sarcasm.utils.filters.TrainFileFilter" project="JSarcasmCNN" 
+    file="/JSarcasmCNN/src/main/java/io/rj93/sarcasm/utils/filters/TrainFileFilter.java" binary="false" 
     corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="80" y="434"/>    
+    <position height="-1" width="-1" x="238" y="459"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="5" language="java" name="io.rj93.sarcasm.utils.filters.TestFileFilter" project="sarcasm" 
-    file="/sarcasm/src/main/java/io/rj93/sarcasm/utils/filters/TestFileFilter.java" binary="false" corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="252" y="435"/>    
+  <class id="5" language="java" name="io.rj93.sarcasm.utils.filters.TrainOrTestFileFilter" project="JSarcasmCNN" 
+    file="/JSarcasmCNN/src/main/java/io/rj93/sarcasm/utils/filters/TrainOrTestFileFilter.java" binary="false" 
+    corner="BOTTOM_RIGHT">    
+    <position height="-1" width="-1" x="161" y="295"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
       sort-features="false" accessors="true" visibility="true">      
       <attributes public="true" package="true" protected="true" private="true" static="true"/>      
@@ -50,11 +51,11 @@
   </class>  
   <generalization id="6">    
     <end type="SOURCE" refId="4"/>    
-    <end type="TARGET" refId="3"/>  
+    <end type="TARGET" refId="5"/>  
   </generalization>  
   <generalization id="7">    
-    <end type="SOURCE" refId="5"/>    
-    <end type="TARGET" refId="3"/>  
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="5"/>  
   </generalization>  
   <classifier-display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
     sort-features="false" accessors="true" visibility="true">    

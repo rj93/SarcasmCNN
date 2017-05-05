@@ -44,7 +44,7 @@ public class ChannelDataSetIterator implements MultiDataSetIterator {
         this.numClasses = this.sentenceProvider.numLabelClasses();
         this.labelClassMap = new HashMap<>();
         int count = 0;
-        //First: sort the labels to ensure the same label assignment order (say train vs. test)
+
         List<String> sortedLabels = new ArrayList<>(this.sentenceProvider.allLabels());
         Collections.sort(sortedLabels);
         
@@ -70,6 +70,8 @@ public class ChannelDataSetIterator implements MultiDataSetIterator {
 	
 	/**
      * Generally used post training time to load a single sentence for predictions
+     * @param sentence
+     * @return the array of features from the channels
      */
     public INDArray[] loadSingleSentence(String sentence) {
     	
@@ -98,6 +100,7 @@ public class ChannelDataSetIterator implements MultiDataSetIterator {
 			pairs.add(sentenceProvider.nextSentence());
 		}
 		
+		// create labels array
 		List<String> sentences = new ArrayList<String>();
 		INDArray[] labels = {Nd4j.create(pairs.size(), numClasses)};
 		for (int i = 0; i < pairs.size(); i++){
@@ -107,7 +110,7 @@ public class ChannelDataSetIterator implements MultiDataSetIterator {
 			labels[0].putScalar(i, labelIdx, 1.0);
 		}
 		
-		
+		// retrieve the features from each of the channels
 		INDArray[] features = new INDArray[nChannels];
 		INDArray[] featuresMask = new INDArray[nChannels];
 		for (int channel = 0; channel < nChannels; channel++){

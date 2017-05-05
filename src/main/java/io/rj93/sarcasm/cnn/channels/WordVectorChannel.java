@@ -70,7 +70,6 @@ public class WordVectorChannel extends Channel {
 		
 		List<List<String>> tokenizedSentences = new ArrayList<>(sentences.size());
         int maxLength = -1;
-        int minLength = Integer.MAX_VALUE; //Track to we know if we can skip mask creation for "all same length" case
         for (int i = 0; i < sentences.size(); i++) {
             List<String> tokens = tokenizeSentence(sentences.get(i));
             
@@ -120,18 +119,16 @@ public class WordVectorChannel extends Channel {
                 features.put(indices, vector);
             }
         }
-
-        INDArray featuresMask = null;
-        if (minLength != maxLength) {
-            featuresMask = Nd4j.create(sentences.size(), maxLength);
-
-            for (int i = 0; i < sentences.size(); i++) {
-                int sentenceLength = tokenizedSentences.get(i).size();
-                if (sentenceLength >= maxLength) {
-                    featuresMask.getRow(i).assign(1.0);
-                } else {
-                    featuresMask.get(NDArrayIndex.point(i), NDArrayIndex.interval(0, sentenceLength)).assign(1.0);
-                }
+        
+        
+        // create the feature mask
+        INDArray featuresMask = Nd4j.create(sentences.size(), maxLength);
+        for (int i = 0; i < sentences.size(); i++) {
+            int sentenceLength = tokenizedSentences.get(i).size();
+            if (sentenceLength >= maxLength) {
+            	featuresMask.getRow(i).assign(1.0); // assign all cols in the row to have values
+            } else {
+            	featuresMask.get(NDArrayIndex.point(i), NDArrayIndex.interval(0, sentenceLength)).assign(1.0); // assign up to the sentence length to have values
             }
         }
 		
@@ -141,7 +138,7 @@ public class WordVectorChannel extends Channel {
 	
 	private INDArray getVector(String word) {
         INDArray vector;
-        if (unknownWordHandling == UnknownWordHandling.UseUnknownVector && word == UNKNOWN_WORD_SENTINEL) { //Yes, this *should* be using == for the sentinel String here
+        if (unknownWordHandling == UnknownWordHandling.UseUnknownVector && word == UNKNOWN_WORD_SENTINEL) {
             vector = unknown;
         } else {
             if (useNormalizedWordVectors) {
@@ -153,6 +150,11 @@ public class WordVectorChannel extends Channel {
         return vector;
     }
 	
+	/**
+	 * tokenizes the sentence
+	 * @param sentence
+	 * @return the list of tokens
+	 */
 	private List<String> tokenizeSentence(String sentence) {
         Tokenizer t = tokenizerFactory.create(sentence);
 
@@ -160,9 +162,9 @@ public class WordVectorChannel extends Channel {
         while (t.hasMoreTokens()) {
             String token = t.nextToken();
             if (!wordVector.hasWord(token)) {
+            	// how to handle unknown tokens
                 switch (unknownWordHandling) {
                     case RemoveWord:
-                    	System.out.println("unkown word: " + token);
                         continue;
                     case UseUnknownVector:
                         token = UNKNOWN_WORD_SENTINEL;

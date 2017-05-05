@@ -97,6 +97,7 @@ public class TextCNN {
 		this.nEpochs = nEpochs;
 		
 		int vectorSize = 0;
+		// sum total size of all the channels
 		for (Channel channel : channels){
 			vectorSize += channel.getSize();
 		}
@@ -150,6 +151,11 @@ public class TextCNN {
 		return conf;
 	}
 	
+	/**
+	 * Create a new convolutional layer, with the specificed window of words
+	 * @param noWords
+	 * @return
+	 */
 	private ConvolutionLayer getConvolutionLayer(int noWords){
 		return new ConvolutionLayer.Builder()
 			.kernelSize(noWords,vectorSize)
@@ -159,6 +165,11 @@ public class TextCNN {
 			.build();
 	}
 	
+	/**
+	 * Creates the DataSetIterator form the map
+	 * @param map map containing texts and labels
+	 * @return
+	 */
 	private MultiDataSetIterator getMultiDataSetIterator(Map<String, String> map){
 		List<String> sentences = new ArrayList<String>();
 		List<String> labels = new ArrayList<String>();
@@ -170,6 +181,12 @@ public class TextCNN {
 		return getMultiDataSetIterator(sentences, labels);
 	}
 	
+	/**
+	 * Reads each file, and labels the texts accordingly to create the DataSetIterator
+	 * @param files the files to be read
+	 * @return
+	 * @throws FileNotFoundException
+	 */
 	private MultiDataSetIterator getMultiDataSetIterator(List<File> files) throws FileNotFoundException {
 		
 		List<String> sentences = new ArrayList<String>();
@@ -183,6 +200,7 @@ public class TextCNN {
 				s = FileUtils.readLines(f, "UTF-8");
 				sentences.addAll(s);
 				
+				// determine correct label by looking at file path
 				String label;
 				if (f.getAbsolutePath().contains("pos")){
 					label = "positive";
@@ -191,6 +209,8 @@ public class TextCNN {
 					label = "negative";
 					negCount += s.size();
 				}
+				
+				// insert correct label
 				for (int i = 0; i < s.size(); i++){
 					labels.add(label);
 				}
@@ -203,6 +223,12 @@ public class TextCNN {
 		return getMultiDataSetIterator(sentences, labels);
 	}
 	
+	/**
+	 * instantiates a ChannelDataSetIterator using the sentences and labels
+	 * @param sentences
+	 * @param labels
+	 * @return
+	 */
 	private MultiDataSetIterator getMultiDataSetIterator(List<String> sentences, List<String> labels){
 		LabeledSentenceProvider sentenceProvider = new CollectionLabeledSentenceProvider(sentences, labels, new Random(seed));
 		
@@ -215,6 +241,12 @@ public class TextCNN {
 		return iter;
 	}
 	
+	/**
+	 * trains the model on the training and testing maps
+	 * @param trainMap sentences and labels of the training dataset
+	 * @param testMap sentences and labels of the testing dataset
+	 * @throws IOException
+	 */
 	public void train(Map<String, String> trainMap, Map<String, String> testMap) throws IOException{
 		
 		logger.info("train - trainMap: " + trainMap.size() + ", testMap: " + testMap.size());
@@ -225,6 +257,12 @@ public class TextCNN {
 		train(trainIter, testIter);
 	}
 	
+	/**
+	 * trains the model on the training and testing files
+	 * @param trainFiles training files to be read
+	 * @param testFiles testing files to be read
+	 * @throws IOException
+	 */
 	public void train(List<File> trainFiles, List<File> testFiles) throws IOException {
 		
 		logger.info("train - trainFiles: " + trainFiles.size() + ", testFiles: " + testFiles.size());
@@ -235,6 +273,12 @@ public class TextCNN {
 		train(trainIter, testIter);
 	}
 	
+	/**
+	 * trains the model on the training and testing iterators
+	 * @param trainIter training iterator
+	 * @param testIter testing iterator
+	 * @throws IOException
+	 */
 	private void train(MultiDataSetIterator trainIter, MultiDataSetIterator testIter) throws IOException{
 		labelsMap = ((ChannelDataSetIterator) trainIter).getLabelsMap();
 		
@@ -258,6 +302,14 @@ public class TextCNN {
 		save(dir, "model.bin");
 	}
 	
+	/**
+	 * trains the model on the training and testing maps, using the provided early stopping config
+	 * @param trainMap sentences and labels of the training dataset
+	 * @param testMap sentences and labels of the testing dataset
+	 * @param esConf the early stopping configuration
+	 * @return the EarlyStoppingResult
+	 * @throws IOException
+	 */
 	public EarlyStoppingResult<ComputationGraph> train(Map<String, String> trainMap, Map<String, String> testMap, EarlyStoppingConfiguration<ComputationGraph> esConf) throws IOException {
 		String dir = getModelSaveDir();
 		new File(dir).mkdirs();
@@ -268,6 +320,14 @@ public class TextCNN {
 		return train(trainIter, testIter, esConf);
 	}
 	
+	/**
+	 * trains the model on the training and testing files, using the provided early stopping config
+	 * @param trainFiles training files to be read
+	 * @param testFiles testing files to be read
+	 * @param esConf the early stopping configuration
+	 * @return the EarlyStoppingResult
+	 * @throws IOException
+	 */
 	public EarlyStoppingResult<ComputationGraph> train(List<File> trainFiles, List<File> testFiles, EarlyStoppingConfiguration<ComputationGraph> esConf) throws IOException {
 		String dir = getModelSaveDir();
 		new File(dir).mkdirs();
@@ -278,6 +338,14 @@ public class TextCNN {
 		return train(trainIter, testIter, esConf);
 	}
 	
+	/**
+	 * trains the model on the training and testing iterators, using the provided early stopping config
+	 * @param trainIter training iterator
+	 * @param testIter testing iterator
+	 * @param esConf the early stopping configuration
+	 * @return the EarlyStoppingResult
+	 * @throws IOException
+	 */
 	private EarlyStoppingResult<ComputationGraph> train(MultiDataSetIterator trainIter, MultiDataSetIterator testIter, EarlyStoppingConfiguration<ComputationGraph> esConf) throws IOException {
 		
 		String dir = getModelSaveDir();
@@ -295,15 +363,32 @@ public class TextCNN {
         return result;
 	}
 	
+	/**
+	 * Gets the model save dir, which uses the current system time to avoid over writting
+	 * @return the model save dir
+	 */
 	private static String getModelSaveDir(){
 		String dir = DataHelper.MODELS_DIR + dateFormat.format(System.currentTimeMillis()) + "/";
 		return dir;
 	}
 	
+	/**
+	 * saves the model and configuration
+	 * @param dir the dir to save
+	 * @param fileName the name of the model
+	 * @throws IOException
+	 */
 	public void save(String dir, String fileName) throws IOException{
 		save(dir, fileName, false);
 	}
 	
+	/**
+	 * Saves the model and configuration
+	 * @param dir the dir to save
+	 * @param fileName the name of the model
+	 * @param saveUpdater true if the model is going to be trained after being loaded
+	 * @throws IOException
+	 */
 	public void save(String dir, String fileName, boolean saveUpdater) throws IOException{	
 		new File(dir).mkdirs();
 		String file = FilenameUtils.concat(dir, fileName);
@@ -311,6 +396,11 @@ public class TextCNN {
 		writeConfig(dir);
 	}
 	
+	/**
+	 * Writes the config of the cnn to a json file
+	 * @param dir directory to write to
+	 * @throws IOException
+	 */
 	public void writeConfig(String dir) throws IOException{
 		String file = FilenameUtils.concat(dir, "config.json");
 		
@@ -333,6 +423,13 @@ public class TextCNN {
 		writer.close();
 	}
 	
+	/**
+	 * Loads the model and configuration
+	 * @param dir the dir to laod from
+	 * @param fileName name of the model
+	 * @return a TextCNN object
+	 * @throws IOException
+	 */
 	@SuppressWarnings("rawtypes")
 	public static TextCNN loadFromDir(String dir, String fileName) throws IOException{
 			
@@ -360,7 +457,13 @@ public class TextCNN {
 		return new TextCNN(model, channels, labels, seed);
 	}
 	
-	private static JSONObject loadConfig(String dir) throws IOException{
+	/**
+	 * reads the config file
+	 * @param dir the dir to read from
+	 * @return the JSON congifuration
+	 * @throws IOException
+	 */
+	public static JSONObject loadConfig(String dir) throws IOException{
 		String confFilePath = FilenameUtils.concat(dir, "config.json");
 		
 		List<String> lines = FileUtils.readLines(new File(confFilePath));
@@ -372,6 +475,11 @@ public class TextCNN {
 		return new JSONObject(sb.toString());
 	}
 	
+	/**
+	 * predicts if a text is sarcastic or not
+	 * @param sentence the text
+	 * @return the prediction
+	 */
 	public Prediction predict(String sentence){
 		TextPreProcessor preprocessor = new TextPreProcessor(false, false);
 		String preProcessed = preprocessor.preProcess(sentence);
@@ -386,12 +494,24 @@ public class TextCNN {
 		
 	}
 	
+	/**
+	 * evaluates the model on the test files
+	 * @param testFiles the test files to be read
+	 * @return the Evaluation
+	 * @throws FileNotFoundException
+	 */
 	public Evaluation test(List<File> testFiles) throws FileNotFoundException {
 		MultiDataSetIterator testIter = getMultiDataSetIterator(testFiles);
 		
 		return test(testIter);
 	}
 	
+	/**
+	 * evaluates the model on the test iterator
+	 * @param testIter the test iterator
+	 * @return the Evaluation
+	 * @throws FileNotFoundException
+	 */
 	private Evaluation test(MultiDataSetIterator testIter){
 		logger.info("Starting evaluation...");
 		long start = System.nanoTime();
@@ -403,6 +523,9 @@ public class TextCNN {
         return evaluation;
 	}
 	
+	/**
+	 * Starts the UI server to review training progress at localhost:9000
+	 */
 	public void startUIServer(){
 		logger.info("Starting UI Server");
 		uiServer = UIServer.getInstance();
@@ -411,6 +534,9 @@ public class TextCNN {
 		model.setListeners(new StatsListener(statsStorage));
 	}
 	
+	/**
+	 * Stops the UI Server
+	 */
 	public void stopUIServer(){
 		if  (uiServer != null)
 			uiServer.stop();
@@ -424,8 +550,8 @@ public class TextCNN {
 		int maxSentenceLength = 100;
 	
 		List<Channel> channels = new ArrayList<Channel>();
-//		channels.add(new WordVectorChannel(DataHelper.GOOGLE_NEWS_WORD2VEC, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
-		channels.add(new WordVectorChannel(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb", true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
+		channels.add(new WordVectorChannel(DataHelper.GOOGLE_NEWS_WORD2VEC, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
+		channels.add(new WordVectorChannel(DataHelper.WORD2VEC_DIR + "all-preprocessed-300.emb", true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
 		channels.add(new WordVectorChannel(DataHelper.GLOVE, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength));
 		
 		List<File> trainFiles = DataHelper.getSarcasmFiles(true, false);

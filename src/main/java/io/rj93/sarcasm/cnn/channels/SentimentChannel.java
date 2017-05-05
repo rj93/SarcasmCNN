@@ -42,7 +42,7 @@ public class SentimentChannel extends Channel {
 
 	@Override
 	public MultiResult getFeatureVectors(List<String> sentences) {
-		
+
 		int[] featureShape = new int[4];
         featureShape[0] = sentences.size();
         featureShape[1] = 1;
@@ -54,21 +54,24 @@ public class SentimentChannel extends Channel {
 			String sentence = sentences.get(i);
 			List<String> tokens = tokenizeSentence(sentence);
 			
+			// calculate parts size
 			int tokensPerPart = (int) Math.ceil(tokens.size() / (double) nParts);
 			String[][] parts = new String[nParts][tokensPerPart];
 			
+			// loop through the tokens to seperate them into the requires parts
 			for (int partIndex = 0; partIndex < nParts; partIndex++){
 				for (int tokenIndex = 0; tokenIndex < tokensPerPart; tokenIndex++){
 					int tokenListIndex = (partIndex * tokensPerPart) + tokenIndex;
 					String token;
 					if (tokenListIndex < tokens.size())
 						token = tokens.get(tokenListIndex);
-					else
+					else // last part doesn't have the required amount of tokens
 						token = "";
 					parts[partIndex][tokenIndex] = token;
 				}
 			}
 			
+			// calculate the score for each part
 			double[] partScores = new double[nParts];
 			for (int partIndex = 0; partIndex < nParts; partIndex++){
 				double partScore = 0;
@@ -78,7 +81,7 @@ public class SentimentChannel extends Channel {
 				partScores[partIndex] = partScore;
 			}
 				
-			INDArray vector = Nd4j.zeros(1,3);
+			INDArray vector = Nd4j.zeros(1,nParts); // 1 row, nParts cols
 			for (int j = 0; j < nParts; j++){
 				vector.putScalar(0, j, partScores[j]);
 			}
@@ -108,6 +111,11 @@ public class SentimentChannel extends Channel {
 		return score;
 	}
 	
+	/**
+	 * tokenizes the sentence
+	 * @param sentence
+	 * @return
+	 */
 	private List<String> tokenizeSentence(String sentence){
 		Tokenizer t = tokenizerFactory.create(sentence);
 		
@@ -117,7 +125,10 @@ public class SentimentChannel extends Channel {
         }
 		return tokens;
 	}
-
+	
+	/* 
+	 * based on http://stackoverflow.com/questions/15653091/how-to-use-sentiwordnet
+	 */
 	private static Map<String, Double> loadDictionary(){
 		Map<String, Double> dict = new HashMap<String, Double>();
 

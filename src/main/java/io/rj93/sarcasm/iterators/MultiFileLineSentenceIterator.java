@@ -42,7 +42,7 @@ public class MultiFileLineSentenceIterator extends BaseSentenceIterator {
 
 	public boolean hasNext() {
 		if (!iter.hasNext())
-			getNewFile();
+			getNewFile(); // attempt to get open a new file
 		
 		return iter.hasNext();
 	}
@@ -65,7 +65,7 @@ public class MultiFileLineSentenceIterator extends BaseSentenceIterator {
 	}
 	
 	public boolean isPositive(){
-		return !files.get(index).getName().contains("non-sarcy");
+		return files.get(index).getAbsolutePath().contains("pos");
 	}
 
 }
