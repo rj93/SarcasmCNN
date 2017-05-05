@@ -147,7 +147,7 @@ public class DataHelper {
 		if (stemmed)
 			dir = new File(DataHelper.PREPROCESSED_DATA_STEMMED_DIR);
 		else 
-			dir = new File(DataHelper.PREPROCESSED_DATA_DIR + "2015-quick");
+			dir = new File(DataHelper.PREPROCESSED_DATA_DIR);
 		
 		if (training)
 			return DataHelper.getFilesFromDir(dir, new TrainFileFilter(2), true);
