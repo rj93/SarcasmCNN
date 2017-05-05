@@ -40,6 +40,7 @@ public class WordEmbeddings {
 		SentenceIterator iter = new MultiFileLineSentenceIterator(files);
 		
 		TokenizerFactory t = new DefaultTokenizerFactory();
+		t.setTokenPreProcessor(new CommonPreprocessor());
 		
 		System.out.println("Building model");
 		Word2Vec vec = new Word2Vec.Builder()
