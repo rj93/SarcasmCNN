@@ -31,7 +31,7 @@ public class WordEmbeddings {
 //		files.addAll(DataHelper.getFilesFromDir(dir, new TestFileFilter(2), true));
 //		trainWord2Vec(files, true);
 //		
-		compareEmbeddings();
+//		compareEmbeddings();
 		
 //		buildTSNE();
 	}

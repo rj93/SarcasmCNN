@@ -73,6 +73,9 @@ public class WordVectorChannel extends Channel {
         for (int i = 0; i < sentences.size(); i++) {
             List<String> tokens = tokenizeSentence(sentences.get(i));
             
+            if(tokens.isEmpty()) // required to stop ND4JIllegalArgumentException
+            	tokens.add(UNKNOWN_WORD_SENTINEL);
+            
             maxLength = Math.max(maxLength, tokens.size());
             tokenizedSentences.add(tokens);
         }
