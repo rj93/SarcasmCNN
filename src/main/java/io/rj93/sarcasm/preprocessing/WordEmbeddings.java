@@ -26,10 +26,10 @@ public class WordEmbeddings {
 	
 	public static void main(String[] args) throws Exception{
 		
-		File dir = new File(DataHelper.PREPROCESSED_DATA_STEMMED_DIR);
-		List<File> files = DataHelper.getFilesFromDir(dir, new TrainFileFilter(2), true);
-		files.addAll(DataHelper.getFilesFromDir(dir, new TestFileFilter(2), true));
-		trainWord2Vec(files, true);
+//		File dir = new File(DataHelper.PREPROCESSED_DATA_STEMMED_DIR);
+//		List<File> files = DataHelper.getFilesFromDir(dir, new TrainFileFilter(2), true);
+//		files.addAll(DataHelper.getFilesFromDir(dir, new TestFileFilter(2), true));
+//		trainWord2Vec(files, true);
 		
 //		compareEmbeddings();
 		
@@ -73,7 +73,7 @@ public class WordEmbeddings {
 	public static void buildTSNE() throws IOException{
 		
 		System.out.print("Loading word2vec... ");
-		WordVectors wordVector = WordVectorSerializer.readWord2VecModel(new File(DataHelper.WORD2VEC_DIR + "all-preprocessed-300-test.emb"));
+		WordVectors wordVector = WordVectorSerializer.readWord2VecModel(new File(DataHelper.WORD2VEC_DIR + "all-preprocessed-300.emb"));
 		System.out.println("complete");
         VocabCache cache = wordVector.vocab();
         INDArray weights = wordVector.lookupTable().getWeights();
@@ -106,18 +106,28 @@ public class WordEmbeddings {
 	}
 	
 	public static void compareEmbeddings(){
-		Word2Vec google = WordVectorSerializer.readWord2VecModel(DataHelper.GOOGLE_NEWS_WORD2VEC);
+		Word2Vec pretrained = WordVectorSerializer.readWord2VecModel(DataHelper.GLOVE);
 		Word2Vec mine = WordVectorSerializer.readWord2VecModel(DataHelper.WORD2VEC_DIR + "all-preprocessed-300.emb");
 		
-		String[] mostCommonWords = {"like", "get", "dont", "peopl", "im", "one", "would", "know", "make", "go"};
+		String[] mostCommonWords = {".", ",", "?", "!", "\"", "-", "*", "dont", ":", 
+			"people", "im", "/", ";", "&", "yeah", "gt", "good", "...", "youre", 
+			"time", "the", "make", "game", "didnt", "to", "a", "doesnt", "URL", "man", 
+			"thing", "i", "back", "great", "hes", "ive", "work", "isnt", "and", "pretty", 
+			"love", "2", "bad", "shit", "1", "you", "guy", "theyre", "fuck", "things", 
+			"**", "3", "edit", "totally", "of", "made", "thought", "day", "guys", "lot", 
+			"play", "makes", "years", "is", "women", "money", "%", "that", "year", 
+			"ill", "feel", "post", "give", "fucking", "it", "life", "real", "id", "world", "point", 
+			"put", "wrong", "$", "find", "reddit", "nice", "god", "in", "guess", "long", 
+			"wow", "5", "person", "hard", "men", "big", "games", "white", "free", "read", "stop"};
 		
-		for (String word : mostCommonWords){
-			if(google.hasWord(word)){
-				Collection<String> googleList = google.wordsNearest(word, 10);
+		for (int i = 0; i < mostCommonWords.length; i++){
+			String word = mostCommonWords[i];
+			if(pretrained.hasWord(word)){
+				Collection<String> pretrainedList = pretrained.wordsNearest(word, 10);
 				Collection<String> myList = mine.wordsNearest(word, 10);
 				
-				System.out.println("Closests word to: " + word);
-				System.out.println("Google: " + googleList);
+				System.out.println((i+1) + " - closests word to: " + word);
+				System.out.println("GloVe: " + pretrainedList);
 				System.out.println("Mine: " + myList);
 				System.out.println();
 			}
