@@ -37,7 +37,6 @@ public class DataHelper {
 	public final static String REDDIT_COMP_DIR = DATA_DIR + "extra_data/reddit_competition/";
 	public final static String SARCASMV2_FILE = DATA_DIR + "extra_data/NL&DS/sarcasm_v2.csv";
 	
-	
 	public final static String GOOGLE_NEWS_WORD2VEC = WORD2VEC_DIR + "google/GoogleNews-vectors-negative300.bin";
 	public final static String GLOVE = WORD2VEC_DIR + "GloVe/glove.6B.300d.txt";
 	
