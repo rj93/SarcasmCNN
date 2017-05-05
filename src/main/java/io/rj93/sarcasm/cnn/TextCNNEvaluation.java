@@ -33,7 +33,8 @@ public class TextCNNEvaluation {
 //		buildModels();
 //		buildAndTestStemmedModel();
 //		testModels();
-		testRedditComp();
+//		testRedditComp();
+//		testSarcasmV2();
 	}
 	
 	public static void buildModels() throws IOException {
@@ -77,9 +78,9 @@ public class TextCNNEvaluation {
 	}
 	
 	public static void buildAndTestStemmedModel() throws IOException {
-		Channel myChannelStemmed = new WordVectorChannel(DataHelper.WORD2VEC_DIR + "all-preprocessed-stemmed-300.emb", true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
-		List<File> trainFiles = DataHelper.getSarcasmFiles(true, true);
-		List<File> testFiles = DataHelper.getSarcasmFiles(false, true);
+		Channel myChannelStemmed = new WordVectorChannel(DataHelper.WORD2VEC_DIR + "all-preprocessed-300.emb", true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
+		List<File> trainFiles = DataHelper.getSarcasmFiles(true, false);
+		List<File> testFiles = DataHelper.getSarcasmFiles(false, false);
 		
 		EarlyStoppingConfiguration<ComputationGraph> esConf = new EarlyStoppingConfiguration.Builder<ComputationGraph>()
 				.epochTerminationConditions(new MaxEpochsTerminationCondition(30))
@@ -128,5 +129,20 @@ public class TextCNNEvaluation {
 		long diff = System.nanoTime() - start;
 		System.out.println("Total time taken: " + PrettyTime.prettyNano(diff));
 	}
+	
+	public static void testSarcasmV2() throws IOException {
+		Channel gloveChannel = new WordVectorChannel(DataHelper.GLOVE, true, UnknownWordHandling.UseUnknownVector, maxSentenceLength);
+		
+		Map<String, String> trainMap = DataHelper.getSarcsasmV2Dataset(true);
+		Map<String, String> testMap = DataHelper.getSarcsasmV2Dataset(false);
+		
+		TextCNN cnn = new TextCNN(outputs, batchSize, epochs, gloveChannel);
+		long start = System.nanoTime();
+		cnn.train(trainMap, testMap);
+		long diff = System.nanoTime() - start;
+		System.out.println("Total time taken: " + PrettyTime.prettyNano(diff));
+	}
+	
+	
 	
 }

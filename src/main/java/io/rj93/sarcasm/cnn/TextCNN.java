@@ -439,7 +439,7 @@ public class TextCNN {
 		List<Channel> channels = new ArrayList<Channel>();
 		JSONArray channelsArray = config.getJSONArray("channels");
 		for (int i = 0; i < channelsArray.length(); i++){
-			channels.add(Channel.loadFromConfig(channelsArray.getString(i)));
+			channels.add(Channel.loadFromConfig(channelsArray.getJSONObject(i)));
 		}
 		
 		Map<String, Integer> labels = new HashMap<String, Integer>();
@@ -558,12 +558,12 @@ public class TextCNN {
 		List<File> testFiles = DataHelper.getSarcasmFiles(false, false);
 		
 		try {
-			TextCNN cnn = new TextCNN(outputs, batchSize, epochs, channels);
-			cnn.startUIServer();
-			long start = System.nanoTime();
-			cnn.train(trainFiles, testFiles);
-			long diff = System.nanoTime() - start;
-			logger.info("Total time taken: " + PrettyTime.prettyNano(diff));
+//			TextCNN cnn = new TextCNN(outputs, batchSize, epochs, channels);
+//			cnn.startUIServer();
+//			long start = System.nanoTime();
+//			cnn.train(trainFiles, testFiles);
+//			long diff = System.nanoTime() - start;
+//			logger.info("Total time taken: " + PrettyTime.prettyNano(diff));
 //			TextCNN cnn = TextCNN.loadFromDir(DataHelper.MODELS_DIR, "model.bin");
 //			cnn.test(testFiles);
 		} catch (Exception e){

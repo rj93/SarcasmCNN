@@ -37,6 +37,12 @@ public class FilterFromRedditRaw implements Runnable {
 		this.outDir = outDir;
 	}
 	
+	/**
+	 * decompresses a bz2 file
+	 * @param inPath path to the bz2 file 
+	 * @param outPath path to save the bz2 file to
+	 * @return if it was successful
+	 */
 	private static boolean decompressFile(String inPath, String outPath){
 		boolean success = false;
 		
@@ -71,11 +77,21 @@ public class FilterFromRedditRaw implements Runnable {
 		return success;
 	}
 	
+	/**
+	 * deletes a file
+	 * @param path path to file
+	 * @return if it was successful
+	 */
 	private static boolean deleteFile(String path){
 		File f = new File(path);
 		return f.delete();
 	}
 	
+	/**
+	 * searches through the uncompressed reddit data to build the sarcastic and non-sarcastic datasets
+	 * @param inFilePath uncompressed reddit data file path
+	 * @param outDirPath the dir to save the datasets to
+	 */
 	private static void filter(String inFilePath, String outDirPath){
 		File inFile = new File(inFilePath);
 

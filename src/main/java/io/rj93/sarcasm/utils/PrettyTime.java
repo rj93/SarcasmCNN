@@ -8,7 +8,7 @@ public class PrettyTime {
 	
 	private static PeriodFormatter formatter = new PeriodFormatterBuilder()
 		     .appendDays()
-		     .appendSuffix("days ")
+		     .appendSuffix(" days ")
 		     .appendHours()
 		     .appendSuffix(" hours ")
 		     .appendMinutes()
@@ -18,7 +18,7 @@ public class PrettyTime {
 		     .toFormatter();
 	
 	public static String prettyNano(long nano){
-		return pretty(nano / 1000000);
+		return pretty(nano / 1000000); // convert to milliseconds
 	}
 	
 	public static String pretty(long ms){

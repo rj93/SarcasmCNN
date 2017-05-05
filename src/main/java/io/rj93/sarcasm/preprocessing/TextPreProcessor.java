@@ -39,7 +39,6 @@ public class TextPreProcessor implements SentencePreProcessor {
 		
 		sentence = sentence.replace(" /s", "");
 		sentence = sentence.replaceAll("'", "");
-		
 
 		sentence = sentence.replaceAll("/?u/[\\w-]+", "USER"); // usernames 
 		sentence = sentence.replaceAll("\\b(https?|ftp|file)://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]", "URL"); // URLS

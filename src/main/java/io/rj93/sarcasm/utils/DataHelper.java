@@ -41,6 +41,9 @@ public class DataHelper {
 	public final static String GOOGLE_NEWS_WORD2VEC = WORD2VEC_DIR + "google/GoogleNews-vectors-negative300.bin";
 	public final static String GLOVE = WORD2VEC_DIR + "GloVe/glove.6B.300d.txt";
 	
+	/**
+	 * @return the windows or mac base dir
+	 */
 	private static String getDataDir(){
 		String dir = null;
 		if (System.getProperty("os.name").contains("Windows")){
@@ -52,6 +55,14 @@ public class DataHelper {
 		return dir;
 	}
 	
+	/**
+	 * retrieves a list a files from a dir, based on the filename filter
+	 * @param dir the base dir
+	 * @param recursive if to search in dirs
+	 * @param filter the file name filter used
+	 * @return list of files
+	 * @throws FileNotFoundException
+	 */
 	public static List<File> getFilesFromDir(File dir, boolean recursive, FilenameFilter filter) throws FileNotFoundException {
 		
 		if (!dir.exists() || !dir.isDirectory())
@@ -61,13 +72,21 @@ public class DataHelper {
 		for (File f : dir.listFiles()) {
 			if (f.isFile() && acceptFilter(f, filter))
 				files.add(f);
-			else if (recursive && !f.isFile())
-				files.addAll(getFilesFromDir(f, true, filter));
+			else if (recursive && !f.isFile()) // is dir
+				files.addAll(getFilesFromDir(f, true, filter)); // recursive call
 		}
 		
 		return files;
 	}
 	
+	/**
+	 * retrieves a list a files from a dir, based on the file filter
+	 * @param dir the base dir
+	 * @param recursive if to search in dirs
+	 * @param filter the file filter used
+	 * @return list of files
+	 * @throws FileNotFoundException
+	 */
 	public static List<File> getFilesFromDir(File dir, FileFilter filter, boolean recursive) throws FileNotFoundException {
 		if (!dir.exists() || !dir.isDirectory())
 			throw new FileNotFoundException("Directory '" + dir.getAbsolutePath() + "' either does not exist, or is not a directory");
@@ -76,8 +95,8 @@ public class DataHelper {
 		for (File f : dir.listFiles()) {
 			if (f.isFile() && acceptFilter(f, filter))
 				files.add(f);
-			else if (recursive && !f.isFile())
-				files.addAll(getFilesFromDir(f, filter, true));
+			else if (recursive && !f.isFile()) // is dir
+				files.addAll(getFilesFromDir(f, filter, true)); // recursive call
 		}
 		
 		return files;
@@ -95,6 +114,10 @@ public class DataHelper {
 		return true;
 	}
 	
+	/*
+	 * experimented with saving each individual text to a individual
+	 * causes too much overhead of reading from files quickly so this function isn't used
+	 */
 	public static void seperateToMultipleFiles(File inFile, File outDir) throws IOException{
 		outDir.mkdirs();
 		List<String> s = Files.readAllLines(Paths.get(inFile.getAbsolutePath()));
@@ -112,12 +135,19 @@ public class DataHelper {
 		System.out.println("Skipped " + count + " files");
 	}
 	
+	/**
+	 * return the reddit sarcasm files
+	 * @param training if trianing files are requested
+	 * @param stemmed if stemmed files are requested
+	 * @return the list of files
+	 * @throws FileNotFoundException
+	 */
 	public static List<File> getSarcasmFiles(boolean training, boolean stemmed) throws FileNotFoundException{
 		File dir;
 		if (stemmed)
 			dir = new File(DataHelper.PREPROCESSED_DATA_STEMMED_DIR);
 		else 
-			dir = new File(DataHelper.PREPROCESSED_DATA_DIR);
+			dir = new File(DataHelper.PREPROCESSED_DATA_DIR + "2015-quick");
 		
 		if (training)
 			return DataHelper.getFilesFromDir(dir, new TrainFileFilter(2), true);
@@ -125,6 +155,12 @@ public class DataHelper {
 			return DataHelper.getFilesFromDir(dir, new TestFileFilter(2), true);
 	}
 	
+	/**
+	 * return Natural Language and Dialogue Systems sarcasm dataset
+	 * @param train if training map is requested
+	 * @return map containing sentences, and labels
+	 * @throws IOException
+	 */
 	public static Map<String, String> getSarcsasmV2Dataset(boolean train) throws IOException {
 		
 		TextPreProcessor preProcessor = new TextPreProcessor(false, false);
@@ -147,6 +183,12 @@ public class DataHelper {
 		return data;
 	}
 	
+	/**
+	 * return PADKK reddit dataset
+	 * @param train if training map is requested
+	 * @return map containing sentences, and labels
+	 * @throws IOException
+	 */
 	public static Map<String, String> getRedditCompDataSet(boolean train) throws IOException {
 		
 		TextPreProcessor preProcessor = new TextPreProcessor(true, false);
@@ -165,14 +207,15 @@ public class DataHelper {
 		reader.readLine();
 	    while ((line = reader.readLine()) != null) {
 	    	try {
-	    		Integer.valueOf(line.split(",")[0]);
+	    		Integer.valueOf(line.split(",")[0]); // start of new data item begins with an integer
 	    		
 	    		String[] parts = s.split(",");
 	    		String comment = parts[1];
-	    		for (int i = 2; i < parts.length - 9; i++){
+	    		for (int i = 2; i < parts.length - 9; i++){ // re-create the comment
 	    			comment += parts[i];
 	    		}
 	    		
+	    		// preprocess and add to map
 	    		comment = preProcessor.preProcess(comment);
 	    		if (comment != null && comment.length() > 0){
 		    		if (parts[parts.length-1].equals("yes")){
@@ -185,8 +228,8 @@ public class DataHelper {
 	    		}
 	    		
 	    		s = line;
-	    	} catch (Exception e){
-	    		s += line;
+	    	} catch (Exception e){ // couldn't cast to int, so must be appended to current data item
+	    		s += line; 
 	    	}
 	    }
 	    reader.close();

@@ -21,6 +21,7 @@ public class TrainOrTestFileFilter implements FileFilter {
 	
 	@Override
 	public boolean accept(File file) {
+		// get correct parent directory
 		File parent = file.getParentFile();
 		for (int i = 1; i < parentIndex; i++){
 			parent = parent.getParentFile();

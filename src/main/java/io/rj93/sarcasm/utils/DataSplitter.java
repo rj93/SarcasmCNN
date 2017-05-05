@@ -61,18 +61,30 @@ public class DataSplitter {
 		return testSet;
 	}
 	
+	/**
+	 * splits the list into train, validation, and testing lists
+	 * @param data
+	 */
 	public void split(List<String> data){
 		for (String s : data){
 			place(s);
 		}
 	}
 	
+	/**
+	 * splits the iter into train, validation, and testing lists
+	 * @param iter
+	 */
 	public void split(SentenceIterator iter){
 		while(iter.hasNext()){
 			place(iter.nextSentence());
 		}
 	}
 	
+	/**
+	 * puts the string into either train, validation, or test list depending on the random float generated 
+	 * @param s
+	 */
 	private void place(String s){
 		float f = rand.nextFloat();
 		if (f < train){
@@ -84,6 +96,14 @@ public class DataSplitter {
 		} 
 	}
 	
+	/**
+	 * writes the data to file
+	 * @param filePath the path to the output file
+	 * @param data the list of data to write
+	 * @param minSize the minimum sentence size
+	 * @param maxSize the maximum sentence size
+	 * @return if writing was successful
+	 */
 	private static boolean writeToFile(String filePath, List<String> data, int minSize, int maxSize){
 		boolean success = false;
 		
@@ -116,18 +136,18 @@ public class DataSplitter {
 
 				List<File> files = FileUtils.listFiles(new File(year.getAbsolutePath() + "/" + Class));
 				for (File f : files){
-					System.out.println(f.getAbsolutePath());
+					
+					// read and preprocess the files
 					List<String> processedStrings = new ArrayList<String>();
 					FileSentenceIterator iter = new FileSentenceIterator(f);
-					iter.setPreProcessor(new JSONPreProcessor(false, true));
+					iter.setPreProcessor(new JSONPreProcessor(false, false));
 					while (iter.hasNext()){
 						String s = iter.nextSentence();
-//							System.out.println(s);
 						processedStrings.add(s);
 					}
 					
 					DataSplitter splitter = new DataSplitter(0.8f, 0f, 0.2f, 123);
-					splitter.split(processedStrings);
+					splitter.split(processedStrings); // split into 80% train, 20% test
 					
 					List<String> train = splitter.getTrainSet();
 					List<String> val = splitter.getValidationSet();
@@ -139,9 +159,10 @@ public class DataSplitter {
 					float valPer = val.size() / totalSize;
 					float testPer = test.size() / totalSize;
 					
-					String outDir = DataHelper.PREPROCESSED_DATA_STEMMED_DIR + year.getName() + "/";
+					String outDir = DataHelper.PREPROCESSED_DATA_DIR + year.getName() + "/";
 					System.out.println(String.format("train = %f, val = %f, test = %f, dir = %s", trainPer, valPer, testPer, year.getName() + "/" +Class));
 					
+					// write lists to file
 					int minSize = 2;
 					int maxSize = Integer.MAX_VALUE;
 					writeToFile(outDir + "train/" + Class + "/" + f.getName(), train, minSize, maxSize);
