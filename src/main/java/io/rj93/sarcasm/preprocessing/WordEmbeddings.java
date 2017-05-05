@@ -26,12 +26,12 @@ public class WordEmbeddings {
 	
 	public static void main(String[] args) throws Exception{
 		
-//		File dir = new File(DataHelper.PREPROCESSED_DATA_STEMMED_DIR);
+//		File dir = new File(DataHelper.PREPROCESSED_DATA_DIR);
 //		List<File> files = DataHelper.getFilesFromDir(dir, new TrainFileFilter(2), true);
 //		files.addAll(DataHelper.getFilesFromDir(dir, new TestFileFilter(2), true));
 //		trainWord2Vec(files, true);
-		
-//		compareEmbeddings();
+//		
+		compareEmbeddings();
 		
 //		buildTSNE();
 	}
@@ -40,7 +40,6 @@ public class WordEmbeddings {
 		SentenceIterator iter = new MultiFileLineSentenceIterator(files);
 		
 		TokenizerFactory t = new DefaultTokenizerFactory();
-		t.setTokenPreProcessor(new CommonPreprocessor());
 		
 		System.out.println("Building model");
 		Word2Vec vec = new Word2Vec.Builder()
@@ -62,7 +61,7 @@ public class WordEmbeddings {
 
         System.out.println(vec.getWordVectorMatrix("like"));
         if (save)
-        	WordVectorSerializer.writeWord2VecModel(vec, DataHelper.WORD2VEC_DIR + "all-preprocessed-stemmed-300.emb");
+        	WordVectorSerializer.writeWord2VecModel(vec, DataHelper.WORD2VEC_DIR + "all-preprocessed-300.emb");
 		
 		System.out.println("Closest Words: ");
         Collection<String> lst = vec.wordsNearest("like", 10);
@@ -106,7 +105,8 @@ public class WordEmbeddings {
 	}
 	
 	public static void compareEmbeddings(){
-		Word2Vec pretrained = WordVectorSerializer.readWord2VecModel(DataHelper.GLOVE);
+		Word2Vec google = WordVectorSerializer.readWord2VecModel(DataHelper.GOOGLE_NEWS_WORD2VEC);
+		Word2Vec glove = WordVectorSerializer.readWord2VecModel(DataHelper.GLOVE);
 		Word2Vec mine = WordVectorSerializer.readWord2VecModel(DataHelper.WORD2VEC_DIR + "all-preprocessed-300.emb");
 		
 		String[] mostCommonWords = {".", ",", "?", "!", "\"", "-", "*", "dont", ":", 
@@ -122,15 +122,15 @@ public class WordEmbeddings {
 		
 		for (int i = 0; i < mostCommonWords.length; i++){
 			String word = mostCommonWords[i];
-			if(pretrained.hasWord(word)){
-				Collection<String> pretrainedList = pretrained.wordsNearest(word, 10);
-				Collection<String> myList = mine.wordsNearest(word, 10);
+			Collection<String> googleList = google.wordsNearest(word, 10);
+			Collection<String> glovedList = glove.wordsNearest(word, 10);
+			Collection<String> myList = mine.wordsNearest(word, 10);
 				
-				System.out.println((i+1) + " - closests word to: " + word);
-				System.out.println("GloVe: " + pretrainedList);
-				System.out.println("Mine: " + myList);
-				System.out.println();
-			}
+			System.out.println((i+1) + " - closests word to: " + word);
+			System.out.println("Mine: " + myList + " has word: " + mine.hasWord(word));
+			System.out.println("Google: " + googleList);
+			System.out.println("GloVe: " + glovedList);
+			System.out.println();
 		}
 	}
 }
