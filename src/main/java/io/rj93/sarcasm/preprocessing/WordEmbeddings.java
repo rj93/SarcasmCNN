@@ -127,7 +127,7 @@ public class WordEmbeddings {
 			Collection<String> myList = mine.wordsNearest(word, 10);
 				
 			System.out.println((i+1) + " - closests word to: " + word);
-			System.out.println("Mine: " + myList + " has word: " + mine.hasWord(word));
+			System.out.println("Mine: " + myList);
 			System.out.println("Google: " + googleList);
 			System.out.println("GloVe: " + glovedList);
 			System.out.println();
