@@ -42,7 +42,7 @@ public class Server {
     }
     
     public static void main(String[] args) throws IOException {
-        Server server = new Server();
+        Server server = new Server(35000);
         server.start();
         System.in.read();
         server.stop();

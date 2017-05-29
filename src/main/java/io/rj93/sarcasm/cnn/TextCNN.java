@@ -439,7 +439,7 @@ public class TextCNN {
 		List<Channel> channels = new ArrayList<Channel>();
 		JSONArray channelsArray = config.getJSONArray("channels");
 		for (int i = 0; i < channelsArray.length(); i++){
-			channels.add(Channel.loadFromConfig(channelsArray.getJSONObject(i)));
+			channels.add(Channel.loadFromConfig(channelsArray.getString(i)));
 		}
 		
 		Map<String, Integer> labels = new HashMap<String, Integer>();
